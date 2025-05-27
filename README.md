@@ -18,6 +18,7 @@ Synchronize your .env.example and .env files effortlessly. env-twin ensures your
 ```bash
 npm install env-twin
 ```
+
 </details>
 
 <details>
@@ -26,6 +27,7 @@ npm install env-twin
 ```bash
 yarn add env-twin
 ```
+
 </details>
 
 <details>
@@ -34,6 +36,7 @@ yarn add env-twin
 ```bash
 pnpm add env-twin
 ```
+
 </details>
 
 <details>
@@ -42,6 +45,7 @@ pnpm add env-twin
 ```bash
 bun add env-twin
 ```
+
 </details>
 
 ## Usage
@@ -58,6 +62,7 @@ npx env-twin
 # Using custom paths
 npx env-twin --source .env.development --dest .env.dev.example
 ```
+
 </details>
 
 <details>
@@ -70,6 +75,7 @@ yarn env-twin
 # Using custom paths
 yarn env-twin --source .env.development --dest .env.dev.example
 ```
+
 </details>
 
 <details>
@@ -82,6 +88,7 @@ pnpm env-twin
 # Using custom paths
 pnpm env-twin --source .env.development --dest .env.dev.example
 ```
+
 </details>
 
 <details>
@@ -94,16 +101,17 @@ bunx env-twin
 # Using custom paths
 bunx env-twin --source .env.development --dest .env.dev.example
 ```
+
 </details>
 
 ### Command Line Options
 
-| Option | Alias | Description | Default |
-|--------|-------|-------------|---------|
-| `--source` | `--src` | Source .env file path | `.env` |
-| `--dest` | `--destination`, `--d`, `--out`, `--target` | Destination .env.example file path | `.env.example` |
-| `--help` | `-h` | Display help message | - |
-| `--version` | `-v` | Display version information | - |
+| Option      | Alias                                       | Description                        | Default        |
+| ----------- | ------------------------------------------- | ---------------------------------- | -------------- |
+| `--source`  | `--src`                                     | Source .env file path              | `.env`         |
+| `--dest`    | `--destination`, `--d`, `--out`, `--target` | Destination .env.example file path | `.env.example` |
+| `--help`    | `-h`                                        | Display help message               | -              |
+| `--version` | `-v`                                        | Display version information        | -              |
 
 ### Examples
 
@@ -120,6 +128,7 @@ npx env-twin --source .env.production --dest .env.prod.example
 # Sync with custom paths
 npx env-twin --source config/.env.local --dest config/.env.example
 ```
+
 </details>
 
 <details>
@@ -135,6 +144,7 @@ yarn env-twin --source .env.production --dest .env.prod.example
 # Sync with custom paths
 yarn env-twin --source config/.env.local --dest config/.env.example
 ```
+
 </details>
 
 <details>
@@ -150,6 +160,7 @@ pnpm env-twin --source .env.production --dest .env.prod.example
 # Sync with custom paths
 pnpm env-twin --source config/.env.local --dest config/.env.example
 ```
+
 </details>
 
 <details>
@@ -165,6 +176,7 @@ bunx env-twin --source .env.production --dest .env.prod.example
 # Sync with custom paths
 bunx env-twin --source config/.env.local --dest config/.env.example
 ```
+
 </details>
 
 ## How It Works
@@ -181,6 +193,7 @@ env-twin processes your environment files in the following way:
 ### Example Transformation
 
 Input (`.env`):
+
 ```env
 # Database configuration
 DB_HOST=localhost
@@ -191,6 +204,7 @@ DB_PASSWORD=secret123
 ```
 
 Output (`.env.example`):
+
 ```env
 # Database configuration
 DB_HOST="input_db_host"
@@ -210,29 +224,32 @@ DB_PASSWORD="input_db_password"
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/env-twin.git
 cd env-twin
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Build the project:
+
 ```bash
 npm run build
 ```
 
 ### Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run build` | Build the TypeScript project |
-| `npm run test` | Run tests |
-| `npm run lint:format` | Format code using Prettier |
-| `npm start` | Run the built project |
+| Script                | Description                  |
+| --------------------- | ---------------------------- |
+| `npm run build`       | Build the TypeScript project |
+| `npm run test`        | Run tests                    |
+| `npm run lint:format` | Format code using Prettier   |
+| `npm start`           | Run the built project        |
 
 ### Running Tests
 

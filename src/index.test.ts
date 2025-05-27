@@ -46,7 +46,9 @@ MULTI_WORD_VARIABLE=test
     fs.writeFileSync(sourceEnvPath, envContent);
 
     // Run the script
-    execSync(`bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`);
+    execSync(
+      `bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`
+    );
 
     // Read the generated .env.example file
     const exampleContent = fs.readFileSync(exampleEnvPath, 'utf-8');
@@ -77,7 +79,9 @@ VAR2=value2
 
     fs.writeFileSync(sourceEnvPath, envContent);
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`);
+    execSync(
+      `bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`
+    );
 
     const exampleContent = fs.readFileSync(exampleEnvPath, 'utf-8');
 
@@ -103,7 +107,9 @@ TEST_VAR=value3
 
     fs.writeFileSync(sourceEnvPath, envContent);
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`);
+    execSync(
+      `bun ${path.join(__dirname, 'index.ts')} --source ${sourceEnvPath} --dest ${exampleEnvPath}`
+    );
 
     const exampleContent = fs.readFileSync(exampleEnvPath, 'utf-8');
 
@@ -118,7 +124,9 @@ TEST_VAR="input_test_var"
 
   test('should handle missing source file', () => {
     expect(() => {
-      execSync(`bun ${path.join(__dirname, 'index.ts')} --source nonexistent.env --dest ${exampleEnvPath}`);
+      execSync(
+        `bun ${path.join(__dirname, 'index.ts')} --source nonexistent.env --dest ${exampleEnvPath}`
+      );
     }).toThrow();
   });
 });

@@ -3,39 +3,49 @@
   "version": "1.0.0",
   "description": "Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync by copying missing keys, highlighting differences, and keeping your project's environment setup consistent and up to date.",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
-  "keywords": [
-    "env",
-    "dotenv",
-    "environment",
-    "sync",
-    "synchronize",
-    "env example",
-    "env sync",
-    "dotenv sync",
-    "env file",
-    "environment variables",
-    ".env",
-    ".env.example",
-    "config",
-    "configuration",
-    "template",
-    "compare",
-    "update",
-    "nodejs",
-    "npm",
-    "bun"
+  "bin": {
+    "env-twin": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "bun test",
     "build": "tsc",
     "start": "bun dist/index.js",
-    "lint:format": "prettier --write ."
+    "lint:format": "prettier --write .",
+    "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment",
+    "sync",
+    "example",
+    "template",
+    "configuration"
+  ],
+  "author": "S Saha",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/env-twin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/env-twin/issues"
+  },
+  "homepage": "https://github.com/yourusername/env-twin#readme",
   "devDependencies": {
     "@types/node": "^20.11.19",
     "prettier": "^3.5.3",
-    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
