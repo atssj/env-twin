@@ -226,7 +226,7 @@ DB_PASSWORD="input_db_password"
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/env-twin.git
+git clone https://github.com/atssj/env-twin.git
 cd env-twin
 ```
 
@@ -273,7 +273,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/yourusername/env-twin/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/atssj/env-twin/issues) on GitHub.
 
 ## Acknowledgments
 
