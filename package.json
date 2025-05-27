@@ -1,6 +1,6 @@
 {
   "name": "env-twin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync by copying missing keys, highlighting differences, and keeping your project's environment setup consistent and up to date.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -34,12 +34,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/env-twin.git"
+    "url": "git+https://github.com/atssj/env-twin.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/env-twin/issues"
+    "url": "https://github.com/atssj/env-twin/issues"
   },
-  "homepage": "https://github.com/yourusername/env-twin#readme",
+  "homepage": "https://github.com/atssj/env-twin#readme",
   "devDependencies": {
     "@types/node": "^20.11.19",
     "prettier": "^3.5.3",
