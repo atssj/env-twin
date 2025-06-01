@@ -2,6 +2,8 @@
 
 Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync by copying missing keys, highlighting differences, and keeping your project's environment setup consistent and up to date.
 
+[![Build and Test](https://github.com/atssj/env-twin/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/atssj/env-twin/actions/workflows/test.yml)
+
 ## Features
 
 - 🚀 Automatically syncs environment variables between `.env` and `.env.example` files
