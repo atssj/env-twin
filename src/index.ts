@@ -69,7 +69,7 @@ function parseArgs(): CliOptions {
 function printUsage() {
   console.log(
     `
-Usage: env-sync [options]
+Usage: env-twin [options]
 
 Options:
   --source, --src       Source .env file path (default: .env)
@@ -78,7 +78,7 @@ Options:
   --version, -v         Display version information
 
 Example:
-  env-sync --src .env.development --destination .env.dev.example
+  env-twin --src .env.development --destination .env.dev.example
 `
   );
 }
@@ -108,7 +108,7 @@ try {
 
   // Handle --version flag
   if (params.version) {
-    console.log(`env-sync version ${getVersion()}`);
+    console.log(`env-twin version ${getVersion()}`);
     process.exit(0);
   }
 
