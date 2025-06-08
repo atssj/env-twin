@@ -15,11 +15,6 @@ jobs:
           persist-credentials: false
           fetch-depth: 0 # Required for version bumping
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Or your preferred Node.js version
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -35,7 +30,7 @@ jobs:
         run: bun test
 
       - name: Install Changesets CLI
-        run: npm install -g @changesets/cli # Ensure it's available, or use npx
+        run: bun add -D @changesets/cli
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
