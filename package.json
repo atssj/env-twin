@@ -16,9 +16,12 @@
   ],
   "scripts": {
     "test": "bun test",
-    "build": "tsc",
+    "build": "bun build.ts",
     "start": "bun dist/index.js",
-    "lint:format": "prettier --write .",
+    "lint": "bun biome lint .",
+    "lint:fix": "bun biome lint --apply .",
+    "format": "bun biome format .",
+    "format:fix": "bun biome format --write .",
     "changeset": "bun changeset",
     "changeset:version": "bun changeset version",
     "changeset:publish": "bun changeset publish"
@@ -45,7 +48,6 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
     "@types/node": "^20.11.19",
-    "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
   "engines": {
