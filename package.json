@@ -19,7 +19,6 @@
     "build": "tsc",
     "start": "bun dist/index.js",
     "lint:format": "prettier --write .",
-    "prepublishOnly": "npm run build",
     "changeset": "bun changeset",
     "changeset:version": "bun changeset version",
     "changeset:publish": "bun changeset publish"
