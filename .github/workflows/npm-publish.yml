@@ -29,9 +29,6 @@ jobs:
       - name: Run tests
         run: bun test
 
-      - name: Install Changesets CLI
-        run: bun add -D @changesets/cli
-
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1

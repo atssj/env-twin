@@ -42,15 +42,15 @@ error() {
 }
 
 info() {
-    echo -e "${Dim}$@ ${Color_Off}"
+  printf '%b\n' "${Dim}$*${Color_Off}"
 }
 
 info_bold() {
-    echo -e "${Bold_White}$@ ${Color_Off}"
+  printf '%b\n' "${Bold_White}$*${Color_Off}"
 }
 
 success() {
-    echo -e "${Green}$@ ${Color_Off}"
+  printf '%b\n' "${Green}$*${Color_Off}"
 }
 
 command -v unzip >/dev/null ||
