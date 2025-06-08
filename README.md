@@ -252,12 +252,45 @@ npm run build
 | `npm run test`        | Run tests                    |
 | `npm run lint:format` | Format code using Prettier   |
 | `npm start`           | Run the built project        |
+| `bun changeset`       | Generate a new changeset file |
+| `bun changeset:version` | Update package versions and changelogs |
+| `bun changeset:publish` | Publish packages to npm       |
 
 ### Running Tests
 
 ```bash
 npm test
 ```
+
+## Release Process
+
+This project uses [Changesets](https://github.com/changesets/changesets) to manage releases.
+
+### Generating a Changeset
+
+When you make a change that you want to include in a release, you need to generate a changeset file. This file documents the changes and specifies the type of version bump (major, minor, or patch) for each package.
+
+To generate a new changeset, run the following command:
+
+```bash
+bun changeset
+```
+
+This will prompt you to select the packages to include in the changeset and the type of version bump for each package. It will also ask for a summary of the changes.
+
+### How it Works
+
+Changeset files are stored in the `.changeset` directory. They are plain text files that describe the changes made in a human-readable format.
+
+When a pull request containing changesets is merged into the `main` branch, the release workflow is triggered. This workflow automatically:
+
+1. Consumes the changeset files.
+2. Updates the versions of the packages in `package.json`.
+3. Updates the `CHANGELOG.md` file.
+4. Commits these changes.
+5. Publishes the new versions to npm.
+
+This process ensures that releases are consistent and that changelogs are always up-to-date.
 
 ## Contributing
 

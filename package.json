@@ -19,7 +19,10 @@
     "build": "tsc",
     "start": "bun dist/index.js",
     "lint:format": "prettier --write .",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "changeset": "bun changeset",
+    "changeset:version": "bun changeset version",
+    "changeset:publish": "bun changeset publish"
   },
   "keywords": [
     "env",
@@ -41,6 +44,7 @@
   },
   "homepage": "https://github.com/atssj/env-twin#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.29.4",
     "@types/node": "^20.11.19",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
