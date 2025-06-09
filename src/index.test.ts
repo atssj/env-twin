@@ -129,4 +129,12 @@ TEST_VAR="input_test_var"
       );
     }).toThrow();
   });
+
+  test('should display version information', () => {
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} --version`).toString();
+    const packageJsonPath = path.resolve(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    const expectedVersion = packageJson.version || 'unknown';
+    expect(output).toContain(`env-twin version ${expectedVersion}`);
+  });
 });
