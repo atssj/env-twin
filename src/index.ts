@@ -85,17 +85,14 @@ Example:
 
 // Get package version from package.json
 function getVersion(): string {
-  try {
-    // Use import.meta.url to get the current module's URL
-    const currentDir = path.dirname(new URL(import.meta.url).pathname);
-    // Navigate to the package.json file
-    const packagePath = path.resolve(currentDir, 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-    return packageJson.version || 'unknown';
-  } catch (error) {
-    return '1.0.0'; // Fallback version
+    try {
+      const packagePath = path.resolve(process.cwd(), 'package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+      return packageJson.version || 'unknown';
+    } catch (error) {
+      return '1.0.0';
+    }
   }
-}
 
 try {
   const params = parseArgs();
