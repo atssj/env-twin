@@ -85,14 +85,14 @@ Example:
 
 // Get package version from package.json
 function getVersion(): string {
-    try {
-      const packagePath = path.resolve(process.cwd(), 'package.json');
-      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-      return packageJson.version || 'unknown';
-    } catch (error) {
-      return '1.0.0';
-    }
+  try {
+    const packagePath = path.resolve(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+    return packageJson.version || 'unknown';
+  } catch (error) {
+    return '1.0.0';
   }
+}
 
 try {
   const params = parseArgs();
