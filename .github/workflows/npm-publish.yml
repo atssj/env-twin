@@ -12,6 +12,9 @@ permissions:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
+    concurrency:
+      group: publish-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.bun
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -45,14 +48,24 @@ jobs:
         run: bun run changeset:version
 
       - name: Commit version updates
+        id: commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "chore: version packages [skip ci]" || echo "No changes to commit"
-          git push origin main
+          if git commit -m "chore: version packages [skip ci]"; then
+            echo "Committed changes"
+            echo "committed=true" >> $GITHUB_OUTPUT
+            git push origin main
+          else
+            echo "No changes to commit"
+            echo "committed=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish to npm
+        if: steps.commit.outputs.committed == 'true'
         run: bun publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
