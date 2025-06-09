@@ -19,9 +19,9 @@
     "build": "tsc",
     "start": "bun dist/index.js",
     "lint:format": "prettier --write .",
-    "changeset": "bun changeset",
-    "changeset:version": "bun changeset version",
-    "changeset:publish": "bun changeset publish"
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
   "keywords": [
     "env",
