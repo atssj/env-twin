@@ -246,15 +246,15 @@ npm run build
 
 ### Available Scripts
 
-| Script                | Description                  |
-| --------------------- | ---------------------------- |
-| `npm run build`       | Build the TypeScript project |
-| `npm run test`        | Run tests                    |
-| `npm run lint:format` | Format code using Prettier   |
-| `npm start`           | Run the built project        |
-| `bun changeset`       | Generate a new changeset file |
+| Script                  | Description                            |
+| ----------------------- | -------------------------------------- |
+| `npm run build`         | Build the TypeScript project           |
+| `npm run test`          | Run tests                              |
+| `npm run lint:format`   | Format code using Prettier             |
+| `npm start`             | Run the built project                  |
+| `bun changeset`         | Generate a new changeset file          |
 | `bun changeset:version` | Update package versions and changelogs |
-| `bun changeset:publish` | Publish packages to npm       |
+| `bun changeset:publish` | Publish packages to npm                |
 
 ### Running Tests
 
