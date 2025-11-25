@@ -2,31 +2,60 @@
 import fs from 'fs';
 import path from 'path';
 
-// Parse command line arguments
+// ============================================================================
+// TYPES AND INTERFACES
+// ============================================================================
+
 interface CliOptions {
   source?: string;
   dest?: string;
   help: boolean;
   version: boolean;
+  noBackup?: boolean;
+  yes?: boolean;
+  keep?: number;
+  list?: boolean;
+  timestamp?: string;
 }
 
-type FlagKey = 'SOURCE' | 'DEST' | 'HELP' | 'VERSION';
+interface ParsedArgs {
+  command?: string;
+  options: CliOptions;
+}
+
+type FlagKey = 'SOURCE' | 'DEST' | 'HELP' | 'VERSION' | 'NO_BACKUP' | 'YES' | 'KEEP' | 'LIST';
 
 const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   SOURCE: ['--source', '--src'],
   DEST: ['--dest', '--destination', '--d', '--out', '--target'],
   HELP: ['--help', '-h'],
   VERSION: ['--version', '-v'],
+  NO_BACKUP: ['--no-backup'],
+  YES: ['--yes', '-y'],
+  KEEP: ['--keep'],
+  LIST: ['--list'],
 } as const;
 
-function parseArgs(): CliOptions {
+// ============================================================================
+// ARGUMENT PARSING
+// ============================================================================
+
+function parseArgs(): ParsedArgs {
   const args = process.argv.slice(2);
+  let command: string | undefined;
   const params: CliOptions = {
     help: false,
     version: false,
   };
 
-  for (let i = 0; i < args.length; i++) {
+  // Check if first argument is a command (doesn't start with -)
+  let startIndex = 0;
+  if (args.length > 0 && !args[0].startsWith('-')) {
+    command = args[0];
+    startIndex = 1;
+  }
+
+  for (let i = startIndex; i < args.length; i++) {
     const arg = args[i];
     const nextArg = args[i + 1];
 
@@ -55,21 +84,55 @@ function parseArgs(): CliOptions {
         params.version = true;
         break;
 
+      case CLI_FLAGS.NO_BACKUP.includes(arg):
+        params.noBackup = true;
+        break;
+
+      case CLI_FLAGS.YES.includes(arg):
+        params.yes = true;
+        break;
+
+      case CLI_FLAGS.KEEP.includes(arg):
+        if (!nextArg || nextArg.startsWith('-')) {
+          throw new Error(`Missing value for ${arg} argument`);
+        }
+        params.keep = parseInt(nextArg, 10);
+        if (isNaN(params.keep)) {
+          throw new Error(`Invalid value for ${arg}: must be a number`);
+        }
+        i++;
+        break;
+
+      case CLI_FLAGS.LIST.includes(arg):
+        params.list = true;
+        break;
+
       default:
         if (arg.startsWith('-')) {
           throw new Error(`Unknown option '${arg}'`);
+        } else if (!params.timestamp) {
+          // Capture first non-flag argument as timestamp (for restore command)
+          params.timestamp = arg;
         }
     }
   }
 
-  return params;
+  return { command, options: params };
 }
 
-// Print usage information
+// ============================================================================
+// USAGE AND HELP
+// ============================================================================
+
 function printUsage() {
   console.log(
     `
-Usage: env-twin [options]
+Usage: env-twin [command] [options]
+
+Commands:
+  sync                  Synchronize environment variable keys across all .env* files
+  restore [timestamp]   Restore .env* files from a backup
+  clean-backups         Delete old backups, keeping the most recent ones
 
 Options:
   --source, --src       Source .env file path (default: .env)
@@ -77,13 +140,91 @@ Options:
   --help, -h            Display this help message
   --version, -v         Display version information
 
-Example:
+Examples:
   env-twin --src .env.development --destination .env.dev.example
+  env-twin sync
+  env-twin restore
+  env-twin clean-backups --keep 5
 `
   );
 }
 
-// Get package version from package.json
+function printSyncUsage() {
+  console.log(
+    `
+Usage: env-twin sync [options]
+
+Synchronize environment variable keys across all .env* files in the current directory.
+
+Options:
+  --no-backup           Skip creating a backup before syncing
+  --help, -h            Display this help message
+
+The sync command will:
+  - Detect all .env* files (.env, .env.local, .env.development, .env.testing, .env.staging, .env.example)
+  - Collect all unique environment variable keys from all files
+  - Add missing keys to each file with empty values
+  - Ensure .env.example contains all keys with placeholder values
+  - Preserve existing values and file structure
+  - Create a backup in .env-twin/ before modifying files
+
+Examples:
+  env-twin sync
+  env-twin sync --no-backup
+`
+  );
+}
+
+function printRestoreUsage() {
+  console.log(
+    `
+Usage: env-twin restore [timestamp] [options]
+
+Restore .env* files from a backup.
+
+Arguments:
+  timestamp             Specific backup timestamp to restore (format: YYYYMMDD-HHMMSS)
+
+Options:
+  --yes, -y             Skip confirmation prompt
+  --list                List available backups without restoring
+  --help, -h            Display this help message
+
+If no timestamp is provided, available backups will be listed for selection.
+
+Examples:
+  env-twin restore
+  env-twin restore 20241125-143022
+  env-twin restore 20241125-143022 --yes
+  env-twin restore --list
+`
+  );
+}
+
+function printCleanBackupsUsage() {
+  console.log(
+    `
+Usage: env-twin clean-backups [options]
+
+Delete old backups, keeping the most recent ones.
+
+Options:
+  --keep <number>       Number of recent backups to keep (default: 10)
+  --yes, -y             Skip confirmation prompt
+  --help, -h            Display this help message
+
+Examples:
+  env-twin clean-backups
+  env-twin clean-backups --keep 5
+  env-twin clean-backups --keep 5 --yes
+`
+  );
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
 function getVersion(): string {
   try {
     const packagePath = path.resolve(process.cwd(), 'package.json');
@@ -94,34 +235,13 @@ function getVersion(): string {
   }
 }
 
-try {
-  const params = parseArgs();
+// ============================================================================
+// DEFAULT COMMAND (copy .env to .env.example)
+// ============================================================================
 
-  // Handle --help flag
-  if (params.help) {
-    printUsage();
-    process.exit(0);
-  }
-
-  // Handle --version flag
-  if (params.version) {
-    console.log(`env-twin version ${getVersion()}`);
-    process.exit(0);
-  }
-
-  // Show usage if no arguments provided and no default files exist
-  if (
-    Object.keys(params).length === 2 &&
-    !params.source &&
-    !params.dest &&
-    !fs.existsSync('.env')
-  ) {
-    printUsage();
-    process.exit(0);
-  }
-
-  const envPath: string = path.resolve(process.cwd(), params.source || '.env');
-  const examplePath: string = path.resolve(process.cwd(), params.dest || '.env.example');
+function runDefaultCommand(options: CliOptions): void {
+  const envPath: string = path.resolve(process.cwd(), options.source || '.env');
+  const examplePath: string = path.resolve(process.cwd(), options.dest || '.env.example');
 
   // Check if source file exists
   if (!fs.existsSync(envPath)) {
@@ -173,6 +293,70 @@ try {
   } catch (error) {
     console.error(`Error: Failed to write to '${examplePath}'`);
     console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// MAIN ENTRY POINT
+// ============================================================================
+
+try {
+  const parsed = parseArgs();
+  const { command, options } = parsed;
+
+  // Handle --help flag
+  if (options.help) {
+    if (command === 'sync') {
+      printSyncUsage();
+    } else if (command === 'restore') {
+      printRestoreUsage();
+    } else if (command === 'clean-backups') {
+      printCleanBackupsUsage();
+    } else {
+      printUsage();
+    }
+    process.exit(0);
+  }
+
+  // Handle --version flag
+  if (options.version) {
+    console.log(`env-twin version ${getVersion()}`);
+    process.exit(0);
+  }
+
+  // Dispatch to appropriate command
+  if (command === 'sync') {
+    // Import and run sync command
+    const { runSync } = await import('./commands/sync.js');
+    runSync({ noBackup: options.noBackup });
+  } else if (command === 'restore') {
+    // Import and run restore command
+    const { runRestore } = await import('./commands/restore.js');
+    runRestore({
+      timestamp: options.timestamp,
+      yes: options.yes,
+      list: options.list,
+    });
+  } else if (command === 'clean-backups') {
+    // Import and run clean-backups command
+    const { runCleanBackups } = await import('./commands/clean-backups.js');
+    runCleanBackups({
+      keep: options.keep,
+      yes: options.yes,
+    });
+  } else if (!command) {
+    // Show usage if no arguments provided and no default files exist
+    if (!options.source && !options.dest && !fs.existsSync('.env')) {
+      printUsage();
+      process.exit(0);
+    }
+
+    // Run default command
+    runDefaultCommand(options);
+  } else {
+    console.error(`Error: Unknown command '${command}'`);
+    printUsage();
     process.exit(1);
   }
 } catch (error) {
