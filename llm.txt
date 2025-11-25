@@ -1,0 +1,94 @@
+# env-twin - Environment Variable Management Tool
+
+## Package Overview
+**env-twin** is a powerful TypeScript-based CLI tool that automatically synchronizes environment variable keys across multiple `.env*` files in Node.js projects. It ensures consistency between `.env`, `.env.local`, `.env.development`, `.env.example`, and other environment configuration files.
+
+## Description
+env-twin streamlines environment variable management by copying missing keys across all `.env*` files while preserving comments and formatting. This environment synchronization tool sanitizes sensitive values in example files by replacing them with descriptive placeholders (e.g., `input_db_password`), enhancing security without compromising usability.
+
+With built-in backup creation, restoration, and cleanup capabilities, env-twin provides rollback functionality to safeguard your environment configurations. This cross-platform solution works seamlessly on Windows, macOS, and Linux systems.
+
+## Key Features
+
+### Environment Variable Synchronization
+- Automatically syncs all environment variable keys across `.env*` files
+- Maintains existing values while adding missing keys
+- Preserves comments, formatting, and file structure
+
+### Security & Privacy
+- Creates sanitized `.env.example` templates with placeholder values
+- Protects sensitive data by removing actual credentials from example files
+- Ensures secure sharing of environment templates
+
+### Backup & Recovery
+- Automatically generates timestamped backups before modifying files
+- Provides robust restore functionality with rollback capabilities
+- Includes cleanup commands to manage old backups efficiently
+
+### Developer Experience
+- Lightweight CLI with zero external dependencies
+- Cross-platform compatibility for Windows, macOS, and Linux
+- Seamless integration with CI/CD pipelines
+- Flexible configuration options
+
+## Usage Examples
+
+### Basic Commands
+```bash
+# Synchronize environment variable keys with automatic backup
+env-twin sync
+
+# Restore files from backups with optional timestamp
+env-twin restore [timestamp]
+
+# Clean old backups while keeping specified number
+env-twin clean-backups --keep <number>
+```
+
+### Common Workflows
+1. Run `env-twin sync` to synchronize all environment files
+2. Share `.env.example` files safely without exposing credentials
+3. Restore previous configurations using timestamped backups
+4. Clean up old backups to optimize storage space
+
+## Installation Instructions
+
+Install env-twin as a development dependency using your preferred package manager:
+
+### npm
+```bash
+npm install --save-dev env-twin
+```
+
+### Yarn
+```bash
+yarn add --dev env-twin
+```
+
+### Bun
+```bash
+bun add -D env-twin
+```
+
+### pnpm
+```bash
+pnpm add -D env-twin
+```
+
+## Technical Specifications
+- **Language**: TypeScript
+- **Runtime**: Node.js (version 14.0.0 or higher)
+- **Dependencies**: Zero external dependencies
+- **Module System**: ES Modules
+- **Type Definitions**: Included (.d.ts files)
+
+## License Information
+MIT License - Open source and free for commercial use.
+
+## Repository & Support
+- **GitHub Repository**: https://github.com/atssj/env-twin
+- **Issue Tracking**: Report bugs and request features via GitHub issues
+- **Contributions**: Welcome community contributions through pull requests
+
+## Summary
+env-twin simplifies environment variable management across multiple env files, ensuring consistency, security, and recoverability for Node.js projects. Whether you're managing a simple application or complex microservices architecture, env-twin provides the tools needed to maintain synchronized and secure environment configurations.
