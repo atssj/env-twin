@@ -272,21 +272,55 @@ export class TimestampParser {
   }
 
   /**
+   * Validate timestamps array and return valid entries
+   */
+  private static validateTimestampsArray(timestamps: string[]): string[] {
+    const invalidTimestamps: { timestamp: string; errors: string[] }[] = [];
+    const validTimestamps: string[] = [];
+
+    for (const timestamp of timestamps) {
+      const parsed = this.parseTimestamp(timestamp);
+
+      if (parsed.isValid) {
+        validTimestamps.push(timestamp);
+      } else {
+        invalidTimestamps.push({
+          timestamp,
+          errors: parsed.errors
+        });
+      }
+    }
+
+    if (invalidTimestamps.length > 0) {
+      const errorMessages = invalidTimestamps.map(
+        item => `  "${item.timestamp}": ${item.errors.join(', ')}`
+      ).join('\n');
+
+      throw new Error(`Invalid timestamps found in array:\n${errorMessages}`);
+    }
+
+    return validTimestamps;
+  }
+
+  /**
    * Sort timestamps (returns array sorted from oldest to newest)
    */
   static sortTimestamps(timestamps: string[]): string[] {
-    return timestamps.sort((a, b) => this.compareTimestamps(a, b));
+    const validTimestamps = this.validateTimestampsArray(timestamps);
+    return validTimestamps.sort((a, b) => this.compareTimestamps(a, b));
   }
 
   /**
    * Get most recent timestamp from array
    */
   static getMostRecentTimestamp(timestamps: string[]): string | null {
-    if (timestamps.length === 0) {
+    const validTimestamps = this.validateTimestampsArray(timestamps);
+
+    if (validTimestamps.length === 0) {
       return null;
     }
 
-    const sorted = this.sortTimestamps(timestamps);
+    const sorted = this.sortTimestamps(validTimestamps);
     return sorted[sorted.length - 1];
   }
 
@@ -294,11 +328,13 @@ export class TimestampParser {
    * Get oldest timestamp from array
    */
   static getOldestTimestamp(timestamps: string[]): string | null {
-    if (timestamps.length === 0) {
+    const validTimestamps = this.validateTimestampsArray(timestamps);
+
+    if (validTimestamps.length === 0) {
       return null;
     }
 
-    const sorted = this.sortTimestamps(timestamps);
+    const sorted = this.sortTimestamps(validTimestamps);
     return sorted[0];
   }
 
