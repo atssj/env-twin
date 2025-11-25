@@ -135,6 +135,18 @@ export class RollbackManager {
           .then((processedFiles) => {
             snapshot.files = processedFiles;
 
+            // Save file contents to snapshot directory
+            for (const file of processedFiles) {
+              if (file.content) {
+                const contentPath = path.join(snapshotDir, file.fileName);
+                const contentDir = path.dirname(contentPath);
+                if (!fs.existsSync(contentDir)) {
+                  fs.mkdirSync(contentDir, { recursive: true });
+                }
+                fs.writeFileSync(contentPath, file.content, 'utf-8');
+              }
+            }
+
             // Save snapshot metadata
             const metadataPath = path.join(snapshotDir, 'metadata.json');
             const metadata = {
@@ -439,7 +451,23 @@ export class RollbackManager {
             }
 
             // Check if modification time changed significantly
-            const timeDiff = Math.abs(stats.mtime.getTime() - (fileInfo.stats?.mtime?.getTime() || 0));
+            // Normalize mtime to handle cases where it's a string from JSON
+            const snapshotMtime = fileInfo.stats?.mtime;
+            let snapshotMtimeMs: number;
+            
+            if (snapshotMtime instanceof Date) {
+              snapshotMtimeMs = snapshotMtime.getTime();
+            } else if (typeof snapshotMtime === 'string') {
+              snapshotMtimeMs = new Date(snapshotMtime).getTime();
+            } else if (typeof snapshotMtime === 'number') {
+              snapshotMtimeMs = snapshotMtime;
+            } else {
+              snapshotMtimeMs = 0;
+            }
+            
+            const currentTimeMs = stats.mtime instanceof Date ? stats.mtime.getTime() : new Date(stats.mtime).getTime();
+            const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
+            
             if (timeDiff > 1000) { // 1 second tolerance
               changedFiles.push(fileInfo.fileName);
             }

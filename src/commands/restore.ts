@@ -432,7 +432,7 @@ async function performRestore(session: RestoreSession, restoreLogger: RestoreLog
 /**
  * Legacy function for backward compatibility
  */
-export function runRestore(options: RestoreOptions = {}): void {
+export async function runRestore(options: RestoreOptions = {}): Promise<void> {
   const enhancedOptions: EnhancedRestoreOptions = {
     timestamp: options.timestamp,
     yes: options.yes,
@@ -443,7 +443,7 @@ export function runRestore(options: RestoreOptions = {}): void {
     verbose: process.env.NODE_ENV !== 'production'
   };
 
-  runEnhancedRestore(enhancedOptions);
+  return await runEnhancedRestore(enhancedOptions);
 }
 
 // ============================================================================

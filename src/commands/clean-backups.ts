@@ -1,4 +1,5 @@
 import path from 'path';
+import readline from 'readline/promises';
 import { listBackups, cleanOldBackups, BACKUP_DIR } from '../utils/backup.js';
 
 // ============================================================================
@@ -28,7 +29,7 @@ function formatTimestamp(timestamp: string): string {
 // CLEAN BACKUPS OPERATION
 // ============================================================================
 
-export function runCleanBackups(options: CleanBackupsOptions = {}): void {
+export async function runCleanBackups(options: CleanBackupsOptions = {}): Promise<void> {
   const cwd = process.cwd();
   const keepCount = options.keep ?? 10;
   const backups = listBackups(cwd);
@@ -58,7 +59,19 @@ export function runCleanBackups(options: CleanBackupsOptions = {}): void {
     console.log('To skip this confirmation, use: env-twin clean-backups --yes');
     console.log('To keep a different number of backups, use: env-twin clean-backups --keep <number>');
     console.log('');
-    console.log('Proceeding with cleanup...');
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+    try {
+      const answer = await rl.question('Do you want to proceed with the cleanup? (y/N): ');
+
+      if (answer.toLowerCase() !== 'y' && answer.toLowerCase() !== 'yes') {
+        console.log('Cleanup cancelled.');
+        process.exit(0);
+      }
+    } finally {
+      rl.close();
+    }
   }
 
   // Perform cleanup
