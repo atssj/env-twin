@@ -153,7 +153,13 @@ function mergeEnvFile(filePath: string, allKeys: Set<string>, isExample: boolean
 
     for (const key of missingKeys) {
       if (isExample) {
-        mergedLines.push(`${key}=`);
+        // For .env.example, use a sanitized placeholder
+        const sanitizedKey = key
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_')
+          .replace(/_{2,}/g, '_')
+          .replace(/^_|_$/g, '');
+        mergedLines.push(`${key}=input_${sanitizedKey}`);
       } else {
         mergedLines.push(`${key}=`);
       }
@@ -202,7 +208,7 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
     const filesToBackup = existingFiles.map((f) => f.filePath);
     backupTimestamp = createBackups(filesToBackup, cwd);
     if (backupTimestamp) {
-      console.log(`✓ Created backup in ${path.basename(cwd)}/${path.basename(cwd) === cwd ? '.env-twin' : '.env-twin'} (timestamp: ${backupTimestamp})`);
+      console.log(`✓ Created backup in ${path.join(path.basename(cwd), '.env-twin')} (timestamp: ${backupTimestamp})`);
       console.log('');
     }
   }
@@ -247,9 +253,17 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
   // Create .env.example if it doesn't exist
   const exampleFile = envFiles.find((f) => f.fileName === '.env.example');
   if (!exampleFile?.exists) {
+    const sanitizeKey = (key: string): string => {
+      return key
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .replace(/_{2,}/g, '_')
+        .replace(/^_|_$/g, '');
+    };
+
     const exampleContent = Array.from(allKeys)
       .sort()
-      .map((key) => `${key}=`)
+      .map((key) => `${key}=input_${sanitizeKey(key)}`)
       .join('\n');
 
     if (exampleContent) {
