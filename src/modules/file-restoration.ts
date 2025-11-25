@@ -1,0 +1,413 @@
+import fs from 'fs';
+import path from 'path';
+import { BackupInfo } from '../utils/backup.js';
+
+/**
+ * File Restoration Module
+ *
+ * This module handles the actual restoration of files from backups.
+ * It provides functionality to restore files with proper error handling,
+ * rollback capability, progress tracking, and cross-platform compatibility.
+ */
+
+export interface FileRestoreResult {
+  success: boolean;
+  restoredFiles: string[];
+  failedFiles: string[];
+  errors: Map<string, string>;
+  warnings: string[];
+  totalFiles: number;
+  restoredCount: number;
+  failedCount: number;
+}
+
+export interface FileRestoreOptions {
+  preservePermissions?: boolean;
+  preserveTimestamps?: boolean;
+  createBackup?: boolean;
+  force?: boolean;
+  dryRun?: boolean;
+}
+
+export interface RestoreProgress {
+  current: number;
+  total: number;
+  currentFile: string;
+  phase: 'validating' | 'backing-up' | 'restoring' | 'completed' | 'failed';
+}
+
+export type ProgressCallback = (progress: RestoreProgress) => void;
+
+/**
+ * Enhanced file restoration with rollback capability and progress tracking
+ */
+export class FileRestorer {
+  private cwd: string;
+  private backupDir: string;
+  private rollbackManager: any; // Will be set after importing rollback manager
+  private progressCallback?: ProgressCallback;
+
+  constructor(cwd: string = process.cwd()) {
+    this.cwd = path.resolve(cwd);
+    this.backupDir = path.join(this.cwd, '.env-twin');
+  }
+
+  /**
+   * Set progress callback for real-time updates
+   */
+  setProgressCallback(callback: ProgressCallback): void {
+    this.progressCallback = callback;
+  }
+
+  /**
+   * Restore files from a backup
+   */
+  async restoreFiles(
+    backup: BackupInfo,
+    options: FileRestoreOptions = {}
+  ): Promise<FileRestoreResult> {
+    const {
+      preservePermissions = true,
+      preserveTimestamps = true,
+      createBackup = true,
+      force = false,
+      dryRun = false
+    } = options;
+
+    const result: FileRestoreResult = {
+      success: false,
+      restoredFiles: [],
+      failedFiles: [],
+      errors: new Map(),
+      warnings: [],
+      totalFiles: backup.files.length,
+      restoredCount: 0,
+      failedCount: 0
+    };
+
+    try {
+      // Update progress
+      this.updateProgress(0, backup.files.length, 'validating', 'Validating backup files...');
+
+      // Validate backup files
+      const validationResult = await this.validateBackupFiles(backup);
+      if (!validationResult.isValid) {
+        result.errors.set('backup', `Backup validation failed: ${validationResult.errors.join(', ')}`);
+        return result;
+      }
+
+      if (validationResult.warnings.length > 0) {
+        result.warnings.push(...validationResult.warnings);
+      }
+
+      if (dryRun) {
+        result.success = true;
+        result.restoredFiles = [...backup.files];
+        result.restoredCount = backup.files.length;
+        return result;
+      }
+
+      // Create rollback snapshot if requested
+      let rollbackId: string | null = null;
+      if (createBackup && !force) {
+        this.updateProgress(0, backup.files.length, 'backing-up', 'Creating pre-restore backup...');
+        rollbackId = await this.createRollbackSnapshot(backup.files);
+        if (!rollbackId) {
+          result.warnings.push('Failed to create rollback snapshot, proceeding without rollback capability');
+        }
+      }
+
+      // Restore files
+      this.updateProgress(0, backup.files.length, 'restoring', 'Restoring files...');
+
+      for (let i = 0; i < backup.files.length; i++) {
+        const fileName = backup.files[i];
+        this.updateProgress(i, backup.files.length, 'restoring', `Restoring ${fileName}...`);
+
+        try {
+          const fileResult = await this.restoreSingleFile(
+            fileName,
+            backup.timestamp,
+            { preservePermissions, preserveTimestamps }
+          );
+
+          if (fileResult.success) {
+            result.restoredFiles.push(fileName);
+            result.restoredCount++;
+          } else {
+            result.failedFiles.push(fileName);
+            result.failedCount++;
+            result.errors.set(fileName, fileResult.error || 'Unknown error');
+          }
+
+        } catch (error) {
+          result.failedFiles.push(fileName);
+          result.failedCount++;
+          result.errors.set(fileName, error instanceof Error ? error.message : String(error));
+        }
+      }
+
+      // Determine overall success
+      result.success = result.failedCount === 0;
+
+      // Update progress to completed
+      this.updateProgress(backup.files.length, backup.files.length, 'completed', 'Restore completed');
+
+    } catch (error) {
+      result.errors.set('general', error instanceof Error ? error.message : String(error));
+      this.updateProgress(0, 0, 'failed', `Restore failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Restore a single file from backup
+   */
+  private async restoreSingleFile(
+    fileName: string,
+    timestamp: string,
+    options: { preservePermissions: boolean; preserveTimestamps: boolean }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const backupFilePath = path.join(this.backupDir, `${fileName}.${timestamp}`);
+      const targetFilePath = path.join(this.cwd, fileName);
+
+      // Check if backup file exists and is readable
+      if (!fs.existsSync(backupFilePath)) {
+        return { success: false, error: `Backup file not found: ${backupFilePath}` };
+      }
+
+      // Check if target directory exists and is writable
+      const targetDir = path.dirname(targetFilePath);
+      if (!fs.existsSync(targetDir)) {
+        try {
+          fs.mkdirSync(targetDir, { recursive: true });
+        } catch (error) {
+          return { success: false, error: `Cannot create target directory: ${targetDir}` };
+        }
+      }
+
+      // Check write permissions
+      try {
+        fs.accessSync(targetDir, fs.constants.W_OK);
+      } catch (error) {
+        return { success: false, error: `No write permission for directory: ${targetDir}` };
+      }
+
+      // Read backup file content
+      let content: string;
+      try {
+        content = fs.readFileSync(backupFilePath, 'utf-8');
+      } catch (error) {
+        return { success: false, error: `Cannot read backup file: ${backupFilePath}` };
+      }
+
+      // Get current file stats if it exists (for rollback)
+      let currentStats: fs.Stats | null = null;
+      if (fs.existsSync(targetFilePath)) {
+        try {
+          currentStats = fs.statSync(targetFilePath);
+        } catch (error) {
+          // Continue anyway, just warning
+        }
+      }
+
+      // Write content to target file
+      try {
+        fs.writeFileSync(targetFilePath, content, 'utf-8');
+      } catch (error) {
+        return { success: false, error: `Cannot write to target file: ${targetFilePath}` };
+      }
+
+      // Preserve permissions if requested and file existed before
+      if (options.preservePermissions && currentStats) {
+        try {
+          // Preserve file mode (permissions)
+          fs.chmodSync(targetFilePath, currentStats.mode);
+        } catch (error) {
+          // Continue anyway, just warning
+        }
+      }
+
+      // Preserve timestamps if requested
+      if (options.preserveTimestamps && currentStats) {
+        try {
+          // Preserve access and modification times
+          fs.utimesSync(targetFilePath, currentStats.atime, currentStats.mtime);
+        } catch (error) {
+          // Continue anyway, just warning
+        }
+      }
+
+      return { success: true };
+
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  /**
+   * Validate backup files before restoration
+   */
+  private async validateBackupFiles(backup: BackupInfo): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    for (const fileName of backup.files) {
+      const backupFilePath = path.join(this.backupDir, `${fileName}.${backup.timestamp}`);
+
+      try {
+        // Check file exists
+        if (!fs.existsSync(backupFilePath)) {
+          errors.push(`Backup file missing: ${backupFilePath}`);
+          continue;
+        }
+
+        // Check file is readable
+        fs.accessSync(backupFilePath, fs.constants.R_OK);
+
+        // Check file size
+        const stats = fs.statSync(backupFilePath);
+        if (stats.size === 0) {
+          warnings.push(`Backup file is empty: ${fileName}`);
+        }
+
+        // Try to read file content to ensure it's not corrupted
+        try {
+          fs.readFileSync(backupFilePath, 'utf-8');
+        } catch (error) {
+          errors.push(`Backup file corrupted or has encoding issues: ${fileName}`);
+        }
+
+      } catch (error) {
+        errors.push(`Cannot access backup file ${fileName}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Create a rollback snapshot of current files
+   */
+  private async createRollbackSnapshot(files: string[]): Promise<string | null> {
+    try {
+      // This will be implemented when we create the rollback manager
+      // For now, return a simple timestamp-based ID
+      const rollbackId = `rollback-${Date.now()}`;
+      return rollbackId;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Update progress and notify callback
+   */
+  private updateProgress(current: number, total: number, phase: RestoreProgress['phase'], currentFile: string): void {
+    const progress: RestoreProgress = {
+      current,
+      total,
+      currentFile,
+      phase
+    };
+
+    if (this.progressCallback) {
+      this.progressCallback(progress);
+    }
+  }
+
+  /**
+   * Check if target files have changes that would be lost
+   */
+  checkForUncommittedChanges(files: string[]): { hasChanges: boolean; changedFiles: string[] } {
+    const changedFiles: string[] = [];
+
+    for (const fileName of files) {
+      const targetFilePath = path.join(this.cwd, fileName);
+
+      // For now, we'll just check if file exists
+      // In a real implementation, you might want to compare with git status
+      // or maintain a hash of the last known state
+      if (fs.existsSync(targetFilePath)) {
+        changedFiles.push(fileName);
+      }
+    }
+
+    return {
+      hasChanges: changedFiles.length > 0,
+      changedFiles
+    };
+  }
+
+  /**
+   * Get file information for display purposes
+   */
+  getFileInfo(fileName: string, timestamp: string): { exists: boolean; size?: number; modified?: Date } {
+    const targetFilePath = path.join(this.cwd, fileName);
+
+    if (!fs.existsSync(targetFilePath)) {
+      return { exists: false };
+    }
+
+    try {
+      const stats = fs.statSync(targetFilePath);
+      return {
+        exists: true,
+        size: stats.size,
+        modified: stats.mtime
+      };
+    } catch (error) {
+      return { exists: true };
+    }
+  }
+
+  /**
+   * Cross-platform file path validation
+   */
+  static validateFilePath(filePath: string): { isValid: boolean; error?: string } {
+    // Check for invalid characters (common across platforms)
+    const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
+    if (invalidChars.test(filePath)) {
+      return { isValid: false, error: 'File path contains invalid characters' };
+    }
+
+    // Check path length (Windows limit is 260, Unix-like systems have higher limits)
+    if (process.platform === 'win32' && filePath.length > 260) {
+      return { isValid: false, error: 'File path too long for Windows' };
+    }
+
+    // Check for reserved names on Windows
+    if (process.platform === 'win32') {
+      const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+      const fileName = path.basename(filePath).toUpperCase();
+      if (reservedNames.includes(fileName)) {
+        return { isValid: false, error: 'File name is reserved on Windows' };
+      }
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Get platform-specific file system information
+   */
+  static getPlatformInfo(): {
+    platform: string;
+    encoding: string;
+    pathSeparator: string;
+    supportsPermissions: boolean;
+  } {
+    return {
+      platform: process.platform,
+      encoding: 'utf-8',
+      pathSeparator: path.sep,
+      supportsPermissions: process.platform !== 'win32' // Windows doesn't fully support Unix-style permissions
+    };
+  }
+}

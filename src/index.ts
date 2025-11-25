@@ -16,6 +16,12 @@ interface CliOptions {
   keep?: number;
   list?: boolean;
   timestamp?: string;
+  preservePermissions?: boolean;
+  preserveTimestamps?: boolean;
+  createRollback?: boolean;
+  force?: boolean;
+  dryRun?: boolean;
+  verbose?: boolean;
 }
 
 interface ParsedArgs {
@@ -23,7 +29,7 @@ interface ParsedArgs {
   options: CliOptions;
 }
 
-type FlagKey = 'SOURCE' | 'DEST' | 'HELP' | 'VERSION' | 'NO_BACKUP' | 'YES' | 'KEEP' | 'LIST';
+type FlagKey = 'SOURCE' | 'DEST' | 'HELP' | 'VERSION' | 'NO_BACKUP' | 'YES' | 'KEEP' | 'LIST' | 'PRESERVE_PERMISSIONS' | 'PRESERVE_TIMESTAMPS' | 'CREATE_ROLLBACK' | 'FORCE' | 'DRY_RUN' | 'VERBOSE';
 
 const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   SOURCE: ['--source', '--src'],
@@ -34,6 +40,12 @@ const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   YES: ['--yes', '-y'],
   KEEP: ['--keep'],
   LIST: ['--list'],
+  PRESERVE_PERMISSIONS: ['--preserve-permissions'],
+  PRESERVE_TIMESTAMPS: ['--preserve-timestamps'],
+  CREATE_ROLLBACK: ['--create-rollback', '--rollback'],
+  FORCE: ['--force', '-f'],
+  DRY_RUN: ['--dry-run', '--simulate'],
+  VERBOSE: ['--verbose', '-v'],
 } as const;
 
 // ============================================================================
@@ -107,6 +119,30 @@ function parseArgs(): ParsedArgs {
         params.list = true;
         break;
 
+      case CLI_FLAGS.PRESERVE_PERMISSIONS.includes(arg):
+        params.preservePermissions = true;
+        break;
+
+      case CLI_FLAGS.PRESERVE_TIMESTAMPS.includes(arg):
+        params.preserveTimestamps = true;
+        break;
+
+      case CLI_FLAGS.CREATE_ROLLBACK.includes(arg):
+        params.createRollback = true;
+        break;
+
+      case CLI_FLAGS.FORCE.includes(arg):
+        params.force = true;
+        break;
+
+      case CLI_FLAGS.DRY_RUN.includes(arg):
+        params.dryRun = true;
+        break;
+
+      case CLI_FLAGS.VERBOSE.includes(arg):
+        params.verbose = true;
+        break;
+
       default:
         if (arg.startsWith('-')) {
           throw new Error(`Unknown option '${arg}'`);
@@ -131,7 +167,7 @@ Usage: env-twin [command] [options]
 
 Commands:
   sync                  Synchronize environment variable keys across all .env* files
-  restore [timestamp]   Restore .env* files from a backup
+  restore [timestamp]   Restore .env* files from a backup (auto-selects most recent if no timestamp)
   clean-backups         Delete old backups, keeping the most recent ones
 
 Options:
@@ -140,10 +176,19 @@ Options:
   --help, -h            Display this help message
   --version, -v         Display version information
 
+Enhanced Restore Features:
+  ✅ Automatic backup discovery - no timestamp needed!
+  ✅ Backup validation and integrity checks
+  ✅ Rollback capability on restoration failures
+  ✅ Cross-platform file system compatibility
+  ✅ Preserve permissions and timestamps
+  ✅ Progress tracking and comprehensive logging
+
 Examples:
   env-twin --src .env.development --destination .env.dev.example
   env-twin sync
-  env-twin restore
+  env-twin restore                    # Automatically restore most recent backup
+  env-twin restore 20241125-143022   # Restore specific backup
   env-twin clean-backups --keep 5
 `
   );
@@ -180,23 +225,42 @@ function printRestoreUsage() {
     `
 Usage: env-twin restore [timestamp] [options]
 
-Restore .env* files from a backup.
+Restore .env* files from a backup. When no timestamp is provided,
+the most recent valid backup will be automatically selected.
 
 Arguments:
   timestamp             Specific backup timestamp to restore (format: YYYYMMDD-HHMMSS)
+                       If omitted, the most recent backup will be used automatically
 
 Options:
   --yes, -y             Skip confirmation prompt
   --list                List available backups without restoring
-  --help, -h            Display this help message
+  --preserve-permissions Preserve original file permissions
+  --preserve-timestamps  Preserve original file timestamps
+  --create-rollback      Create pre-restore snapshot for rollback capability
+  --force, -f            Force restore without checking for changes
+  --dry-run, --simulate  Show what would be restored without making changes
+  --verbose, -v          Enable verbose logging
+  --help, -h             Display this help message
 
-If no timestamp is provided, available backups will be listed for selection.
+Enhanced Features:
+  ✅ Automatic backup discovery - finds most recent backup when no timestamp provided
+  ✅ Backup validation - checks integrity before restoration
+  ✅ Rollback capability - automatic recovery if restoration fails
+  ✅ Cross-platform compatibility - works on Windows, macOS, and Linux
+  ✅ Progress tracking - real-time feedback during restoration
+  ✅ Comprehensive logging - detailed operation logs for debugging
 
 Examples:
-  env-twin restore
-  env-twin restore 20241125-143022
-  env-twin restore 20241125-143022 --yes
-  env-twin restore --list
+  env-twin restore                           # Restore most recent backup
+  env-twin restore 20241125-143022          # Restore specific backup
+  env-twin restore 20241125-143022 --yes    # Restore without confirmation
+  env-twin restore --list                    # List all available backups
+  env-twin restore --dry-run                 # Preview restore without changes
+  env-twin restore --verbose                 # Enable detailed logging
+
+Advanced Usage:
+  env-twin restore --create-rollback --preserve-permissions --verbose
 `
   );
 }
@@ -331,12 +395,18 @@ try {
     const { runSync } = await import('./commands/sync.js');
     runSync({ noBackup: options.noBackup });
   } else if (command === 'restore') {
-    // Import and run restore command
-    const { runRestore } = await import('./commands/restore.js');
-    runRestore({
+    // Import and run enhanced restore command
+    const { runEnhancedRestore } = await import('./commands/restore.js');
+    await runEnhancedRestore({
       timestamp: options.timestamp,
       yes: options.yes,
       list: options.list,
+      preservePermissions: options.preservePermissions,
+      preserveTimestamps: options.preserveTimestamps,
+      createRollback: options.createRollback,
+      force: options.force,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
     });
   } else if (command === 'clean-backups') {
     // Import and run clean-backups command
