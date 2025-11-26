@@ -47,12 +47,14 @@ export class TimestampParser {
       minutes: 0,
       seconds: 0,
       isValid: false,
-      errors: []
+      errors: [],
     };
 
     // Basic format validation
     if (!this.TIMESTAMP_FORMAT.test(timestamp)) {
-      result.errors.push(`Invalid timestamp format: ${timestamp}. Expected format: YYYYMMDD-HHMMSS`);
+      result.errors.push(
+        `Invalid timestamp format: ${timestamp}. Expected format: YYYYMMDD-HHMMSS`
+      );
       return result;
     }
 
@@ -75,7 +77,14 @@ export class TimestampParser {
       const seconds = parseInt(secondsStr, 10);
 
       // Validate individual components
-      const componentErrors = this.validateTimestampComponents(year, month, day, hours, minutes, seconds);
+      const componentErrors = this.validateTimestampComponents(
+        year,
+        month,
+        day,
+        hours,
+        minutes,
+        seconds
+      );
       if (componentErrors.length > 0) {
         result.errors.push(...componentErrors);
         return result;
@@ -85,12 +94,14 @@ export class TimestampParser {
       const date = new Date(year, month - 1, day, hours, minutes, seconds);
 
       // Additional validation - ensure the date object represents the same date
-      if (date.getFullYear() !== year ||
-          date.getMonth() !== (month - 1) ||
-          date.getDate() !== day ||
-          date.getHours() !== hours ||
-          date.getMinutes() !== minutes ||
-          date.getSeconds() !== seconds) {
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month - 1 ||
+        date.getDate() !== day ||
+        date.getHours() !== hours ||
+        date.getMinutes() !== minutes ||
+        date.getSeconds() !== seconds
+      ) {
         result.errors.push(`Invalid date/time components: ${timestamp}`);
         return result;
       }
@@ -104,9 +115,10 @@ export class TimestampParser {
       result.minutes = minutes;
       result.seconds = seconds;
       result.isValid = true;
-
     } catch (error) {
-      result.errors.push(`Failed to parse timestamp: ${error instanceof Error ? error.message : String(error)}`);
+      result.errors.push(
+        `Failed to parse timestamp: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     return result;
@@ -182,12 +194,7 @@ export class TimestampParser {
       return `Invalid timestamp: ${timestamp}`;
     }
 
-    const {
-      includeSeconds = true,
-      use24Hour = true,
-      locale = 'en-US',
-      timeZone = 'UTC'
-    } = options;
+    const { includeSeconds = true, use24Hour = true, locale = 'en-US', timeZone = 'UTC' } = options;
 
     try {
       const date = parsed.date;
@@ -197,7 +204,7 @@ export class TimestampParser {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-        timeZone
+        timeZone,
       });
 
       // Format time part
@@ -205,7 +212,7 @@ export class TimestampParser {
         hour: '2-digit',
         minute: '2-digit',
         timeZone,
-        hour12: !use24Hour
+        hour12: !use24Hour,
       };
 
       if (includeSeconds) {
@@ -286,15 +293,15 @@ export class TimestampParser {
       } else {
         invalidTimestamps.push({
           timestamp,
-          errors: parsed.errors
+          errors: parsed.errors,
         });
       }
     }
 
     if (invalidTimestamps.length > 0) {
-      const errorMessages = invalidTimestamps.map(
-        item => `  "${item.timestamp}": ${item.errors.join(', ')}`
-      ).join('\n');
+      const errorMessages = invalidTimestamps
+        .map(item => `  "${item.timestamp}": ${item.errors.join(', ')}`)
+        .join('\n');
 
       throw new Error(`Invalid timestamps found in array:\n${errorMessages}`);
     }

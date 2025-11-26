@@ -71,7 +71,7 @@ export class FileRestorer {
       preserveTimestamps = true,
       createBackup = true,
       force = false,
-      dryRun = false
+      dryRun = false,
     } = options;
 
     const result: FileRestoreResult = {
@@ -82,7 +82,7 @@ export class FileRestorer {
       warnings: [],
       totalFiles: backup.files.length,
       restoredCount: 0,
-      failedCount: 0
+      failedCount: 0,
     };
 
     try {
@@ -92,7 +92,10 @@ export class FileRestorer {
       // Validate backup files
       const validationResult = await this.validateBackupFiles(backup);
       if (!validationResult.isValid) {
-        result.errors.set('backup', `Backup validation failed: ${validationResult.errors.join(', ')}`);
+        result.errors.set(
+          'backup',
+          `Backup validation failed: ${validationResult.errors.join(', ')}`
+        );
         return result;
       }
 
@@ -113,7 +116,9 @@ export class FileRestorer {
         this.updateProgress(0, backup.files.length, 'backing-up', 'Creating pre-restore backup...');
         rollbackId = await this.createRollbackSnapshot(backup.files);
         if (!rollbackId) {
-          result.warnings.push('Failed to create rollback snapshot, proceeding without rollback capability');
+          result.warnings.push(
+            'Failed to create rollback snapshot, proceeding without rollback capability'
+          );
         }
       }
 
@@ -125,11 +130,10 @@ export class FileRestorer {
         this.updateProgress(i, backup.files.length, 'restoring', `Restoring ${fileName}...`);
 
         try {
-          const fileResult = await this.restoreSingleFile(
-            fileName,
-            backup.timestamp,
-            { preservePermissions, preserveTimestamps }
-          );
+          const fileResult = await this.restoreSingleFile(fileName, backup.timestamp, {
+            preservePermissions,
+            preserveTimestamps,
+          });
 
           if (fileResult.success) {
             result.restoredFiles.push(fileName);
@@ -139,7 +143,6 @@ export class FileRestorer {
             result.failedCount++;
             result.errors.set(fileName, fileResult.error || 'Unknown error');
           }
-
         } catch (error) {
           result.failedFiles.push(fileName);
           result.failedCount++;
@@ -151,11 +154,20 @@ export class FileRestorer {
       result.success = result.failedCount === 0;
 
       // Update progress to completed
-      this.updateProgress(backup.files.length, backup.files.length, 'completed', 'Restore completed');
-
+      this.updateProgress(
+        backup.files.length,
+        backup.files.length,
+        'completed',
+        'Restore completed'
+      );
     } catch (error) {
       result.errors.set('general', error instanceof Error ? error.message : String(error));
-      this.updateProgress(0, 0, 'failed', `Restore failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.updateProgress(
+        0,
+        0,
+        'failed',
+        `Restore failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     return result;
@@ -241,7 +253,6 @@ export class FileRestorer {
       }
 
       return { success: true };
-
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
@@ -250,7 +261,9 @@ export class FileRestorer {
   /**
    * Validate backup files before restoration
    */
-  private async validateBackupFiles(backup: BackupInfo): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> {
+  private async validateBackupFiles(
+    backup: BackupInfo
+  ): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -279,16 +292,17 @@ export class FileRestorer {
         } catch (error) {
           errors.push(`Backup file corrupted or has encoding issues: ${fileName}`);
         }
-
       } catch (error) {
-        errors.push(`Cannot access backup file ${fileName}: ${error instanceof Error ? error.message : String(error)}`);
+        errors.push(
+          `Cannot access backup file ${fileName}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -309,12 +323,17 @@ export class FileRestorer {
   /**
    * Update progress and notify callback
    */
-  private updateProgress(current: number, total: number, phase: RestoreProgress['phase'], currentFile: string): void {
+  private updateProgress(
+    current: number,
+    total: number,
+    phase: RestoreProgress['phase'],
+    currentFile: string
+  ): void {
     const progress: RestoreProgress = {
       current,
       total,
       currentFile,
-      phase
+      phase,
     };
 
     if (this.progressCallback) {
@@ -341,14 +360,17 @@ export class FileRestorer {
 
     return {
       hasChanges: changedFiles.length > 0,
-      changedFiles
+      changedFiles,
     };
   }
 
   /**
    * Get file information for display purposes
    */
-  getFileInfo(fileName: string, timestamp: string): { exists: boolean; size?: number; modified?: Date } {
+  getFileInfo(
+    fileName: string,
+    timestamp: string
+  ): { exists: boolean; size?: number; modified?: Date } {
     const targetFilePath = path.join(this.cwd, fileName);
 
     if (!fs.existsSync(targetFilePath)) {
@@ -360,7 +382,7 @@ export class FileRestorer {
       return {
         exists: true,
         size: stats.size,
-        modified: stats.mtime
+        modified: stats.mtime,
       };
     } catch (error) {
       return { exists: true };
@@ -384,7 +406,30 @@ export class FileRestorer {
 
     // Check for reserved names on Windows
     if (process.platform === 'win32') {
-      const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+      const reservedNames = [
+        'CON',
+        'PRN',
+        'AUX',
+        'NUL',
+        'COM1',
+        'COM2',
+        'COM3',
+        'COM4',
+        'COM5',
+        'COM6',
+        'COM7',
+        'COM8',
+        'COM9',
+        'LPT1',
+        'LPT2',
+        'LPT3',
+        'LPT4',
+        'LPT5',
+        'LPT6',
+        'LPT7',
+        'LPT8',
+        'LPT9',
+      ];
       const fileName = path.basename(filePath).toUpperCase();
       if (reservedNames.includes(fileName)) {
         return { isValid: false, error: 'File name is reserved on Windows' };
@@ -407,7 +452,7 @@ export class FileRestorer {
       platform: process.platform,
       encoding: 'utf-8',
       pathSeparator: path.sep,
-      supportsPermissions: process.platform !== 'win32' // Windows doesn't fully support Unix-style permissions
+      supportsPermissions: process.platform !== 'win32', // Windows doesn't fully support Unix-style permissions
     };
   }
 }

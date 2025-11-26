@@ -47,7 +47,7 @@ export class BackupDiscovery {
       isValid: true,
       errors: [],
       warnings: [],
-      validatedBackups: []
+      validatedBackups: [],
     };
 
     try {
@@ -62,7 +62,9 @@ export class BackupDiscovery {
       try {
         fs.accessSync(this.backupDir, fs.constants.R_OK);
       } catch (error) {
-        result.errors.push(`Backup directory not readable: ${error instanceof Error ? error.message : String(error)}`);
+        result.errors.push(
+          `Backup directory not readable: ${error instanceof Error ? error.message : String(error)}`
+        );
         result.isValid = false;
         return result;
       }
@@ -86,12 +88,15 @@ export class BackupDiscovery {
         }
 
         if (validatedBackup.errors.length > 0) {
-          result.warnings.push(`Backup ${backup.timestamp} has issues: ${validatedBackup.errors.join(', ')}`);
+          result.warnings.push(
+            `Backup ${backup.timestamp} has issues: ${validatedBackup.errors.join(', ')}`
+          );
         }
       }
-
     } catch (error) {
-      result.errors.push(`Failed to discover backups: ${error instanceof Error ? error.message : String(error)}`);
+      result.errors.push(
+        `Failed to discover backups: ${error instanceof Error ? error.message : String(error)}`
+      );
       result.isValid = false;
     }
 
@@ -110,8 +115,7 @@ export class BackupDiscovery {
     }
 
     // Sort by createdAt (most recent first) and return the first one
-    return validBackups
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+    return validBackups.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   }
 
   /**
@@ -132,7 +136,7 @@ export class BackupDiscovery {
       isValid: true,
       errors: [],
       warnings: [],
-      fileStats: new Map()
+      fileStats: new Map(),
     };
 
     // Validate each file in the backup
@@ -155,7 +159,9 @@ export class BackupDiscovery {
         try {
           fs.accessSync(filePath, fs.constants.R_OK);
         } catch (error) {
-          validatedBackup.errors.push(`File ${fileName} is not readable: ${error instanceof Error ? error.message : String(error)}`);
+          validatedBackup.errors.push(
+            `File ${fileName} is not readable: ${error instanceof Error ? error.message : String(error)}`
+          );
           validatedBackup.isValid = false;
           continue;
         }
@@ -170,9 +176,10 @@ export class BackupDiscovery {
           validatedBackup.errors.push(`Invalid timestamp format: ${backup.timestamp}`);
           validatedBackup.isValid = false;
         }
-
       } catch (error) {
-        validatedBackup.errors.push(`Failed to validate file ${fileName}: ${error instanceof Error ? error.message : String(error)}`);
+        validatedBackup.errors.push(
+          `Failed to validate file ${fileName}: ${error instanceof Error ? error.message : String(error)}`
+        );
         validatedBackup.isValid = false;
       }
     }
@@ -237,16 +244,24 @@ export function isValidTimestamp(timestamp: string): boolean {
     const seconds = parseInt(timestamp.substring(13, 15), 10);
 
     // Basic date validation
-    if (month < 1 || month > 12 || day < 1 || day > 31 ||
-        hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+    if (
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31 ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59 ||
+      seconds < 0 ||
+      seconds > 59
+    ) {
       return false;
     }
 
     // Create a date object to validate the date
     const date = new Date(year, month - 1, day);
-    return date.getFullYear() === year &&
-           date.getMonth() === (month - 1) &&
-           date.getDate() === day;
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
   } catch (error) {
     return false;
   }

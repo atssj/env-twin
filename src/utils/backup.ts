@@ -40,7 +40,9 @@ function ensureBackupDir(cwd: string): boolean {
     }
     return true;
   } catch (error) {
-    console.error(`Error: Failed to create backup directory: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to create backup directory: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -68,7 +70,9 @@ export function createBackup(filePath: string, cwd: string): boolean {
     fs.writeFileSync(backupPath, content, 'utf-8');
     return true;
   } catch (error) {
-    console.error(`Error: Failed to backup ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to backup ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -95,7 +99,9 @@ export function createBackups(filePaths: string[], cwd: string): string | null {
       fs.writeFileSync(backupPath, content, 'utf-8');
       successCount++;
     } catch (error) {
-      console.error(`Warning: Failed to backup ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `Warning: Failed to backup ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -141,7 +147,9 @@ export function listBackups(cwd: string): BackupInfo[] {
       }))
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
-    console.error(`Error: Failed to list backups: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to list backups: ${error instanceof Error ? error.message : String(error)}`
+    );
     return [];
   }
 }
@@ -150,7 +158,10 @@ export function listBackups(cwd: string): BackupInfo[] {
 // BACKUP RESTORATION
 // ============================================================================
 
-export function restoreBackup(timestamp: string, cwd: string): { restored: string[]; failed: string[] } {
+export function restoreBackup(
+  timestamp: string,
+  cwd: string
+): { restored: string[]; failed: string[] } {
   const backupPath = path.join(cwd, BACKUP_DIR);
   const restored: string[] = [];
   const failed: string[] = [];
@@ -179,7 +190,9 @@ export function restoreBackup(timestamp: string, cwd: string): { restored: strin
       }
     }
   } catch (error) {
-    console.error(`Error: Failed to restore backup: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to restore backup: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   return { restored, failed };
@@ -211,12 +224,17 @@ export function deleteBackup(timestamp: string, cwd: string): boolean {
 
     return deletedCount > 0;
   } catch (error) {
-    console.error(`Error: Failed to delete backup: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to delete backup: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
 
-export function cleanOldBackups(cwd: string, keepCount: number = 10): { deleted: string[]; kept: string[] } {
+export function cleanOldBackups(
+  cwd: string,
+  keepCount: number = 10
+): { deleted: string[]; kept: string[] } {
   const backups = listBackups(cwd);
   const deleted: string[] = [];
   const kept: string[] = [];
@@ -233,4 +251,3 @@ export function cleanOldBackups(cwd: string, keepCount: number = 10): { deleted:
 
   return { deleted, kept };
 }
-

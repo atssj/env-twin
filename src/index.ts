@@ -29,7 +29,21 @@ interface ParsedArgs {
   options: CliOptions;
 }
 
-type FlagKey = 'SOURCE' | 'DEST' | 'HELP' | 'VERSION' | 'NO_BACKUP' | 'YES' | 'KEEP' | 'LIST' | 'PRESERVE_PERMISSIONS' | 'PRESERVE_TIMESTAMPS' | 'CREATE_ROLLBACK' | 'FORCE' | 'DRY_RUN' | 'VERBOSE';
+type FlagKey =
+  | 'SOURCE'
+  | 'DEST'
+  | 'HELP'
+  | 'VERSION'
+  | 'NO_BACKUP'
+  | 'YES'
+  | 'KEEP'
+  | 'LIST'
+  | 'PRESERVE_PERMISSIONS'
+  | 'PRESERVE_TIMESTAMPS'
+  | 'CREATE_ROLLBACK'
+  | 'FORCE'
+  | 'DRY_RUN'
+  | 'VERBOSE';
 
 const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   SOURCE: ['--source', '--src'],

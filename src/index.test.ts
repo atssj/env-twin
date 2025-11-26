@@ -24,8 +24,15 @@ describe('env-twin CLI', () => {
 
   beforeEach(() => {
     // Clean up test files before each test
-    const envFiles = ['.env', '.env.local', '.env.development', '.env.testing', '.env.staging', '.env.example'];
-    envFiles.forEach((file) => {
+    const envFiles = [
+      '.env',
+      '.env.local',
+      '.env.development',
+      '.env.testing',
+      '.env.staging',
+      '.env.example',
+    ];
+    envFiles.forEach(file => {
       const filePath = path.join(testDir, file);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -156,8 +163,15 @@ describe('env-twin enhanced restore command', () => {
   });
 
   beforeEach(() => {
-    const envFiles = ['.env', '.env.local', '.env.development', '.env.testing', '.env.staging', '.env.example'];
-    envFiles.forEach((file) => {
+    const envFiles = [
+      '.env',
+      '.env.local',
+      '.env.development',
+      '.env.testing',
+      '.env.staging',
+      '.env.example',
+    ];
+    envFiles.forEach(file => {
       const filePath = path.join(testDir, file);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -182,7 +196,9 @@ describe('env-twin enhanced restore command', () => {
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified_value\n');
 
     // Restore without timestamp (should use most recent)
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
+      cwd: testDir,
+    }).toString();
 
     expect(output).toContain('Auto-selected most recent backup');
     expect(output).toContain('Restore operation completed successfully');
@@ -199,19 +215,15 @@ describe('env-twin enhanced restore command', () => {
 
     execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
 
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, {
+      cwd: testDir,
+    }).toString();
 
     expect(output).toContain('Available backups');
     expect(output).toContain('Valid backups');
     expect(output).toContain('env-twin restore');
     expect(output).toContain('Usage examples');
   });
-
-
-
-
-
-
 
   test('should handle invalid timestamp gracefully', () => {
     // Create a backup first
@@ -220,7 +232,9 @@ describe('env-twin enhanced restore command', () => {
 
     // Try to restore with invalid timestamp
     expect(() => {
-      execSync(`bun ${path.join(__dirname, 'index.ts')} restore invalid-timestamp --yes`, { cwd: testDir });
+      execSync(`bun ${path.join(__dirname, 'index.ts')} restore invalid-timestamp --yes`, {
+        cwd: testDir,
+      });
     }).toThrow();
   });
 
@@ -237,7 +251,10 @@ describe('env-twin enhanced restore command', () => {
     }
 
     // Restore with permission preservation
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --preserve-permissions --yes`, { cwd: testDir }).toString();
+    const output = execSync(
+      `bun ${path.join(__dirname, 'index.ts')} restore --preserve-permissions --yes`,
+      { cwd: testDir }
+    ).toString();
 
     expect(output).toContain('Restore operation completed successfully');
   });
@@ -256,7 +273,9 @@ describe('env-twin enhanced restore command', () => {
     fs.writeFileSync(path.join(testDir, '.env.development'), 'VAR3=modified\n');
 
     // Restore all files
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
+      cwd: testDir,
+    }).toString();
 
     expect(output).toContain('Successfully restored: 3 files');
 
@@ -285,7 +304,9 @@ describe('env-twin enhanced restore command', () => {
 
     // Try to restore (should handle corruption gracefully)
     try {
-      const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, { cwd: testDir }).toString();
+      const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
+        cwd: testDir,
+      }).toString();
       // If it doesn't throw, it should mention the issue
       expect(output).toMatch(/corrupted|error|failed/i);
     } catch (error) {
@@ -304,7 +325,10 @@ describe('env-twin enhanced restore command', () => {
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified\n');
 
     // Restore with rollback capability
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --create-rollback --yes`, { cwd: testDir }).toString();
+    const output = execSync(
+      `bun ${path.join(__dirname, 'index.ts')} restore --create-rollback --yes`,
+      { cwd: testDir }
+    ).toString();
 
     expect(output).toContain('Pre-restore snapshot created');
     expect(output).toContain('Restore operation completed successfully');
@@ -326,8 +350,6 @@ describe('env-twin enhanced restore edge cases', () => {
     }
   });
 
-
-
   test('should handle concurrent restore operations gracefully', () => {
     // This test simulates what would happen if multiple restore operations
     // were run simultaneously (in a real scenario)
@@ -337,7 +359,9 @@ describe('env-twin enhanced restore edge cases', () => {
     execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
 
     // First restore should succeed
-    const output1 = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, { cwd: testDir }).toString();
+    const output1 = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
+      cwd: testDir,
+    }).toString();
     expect(output1).toContain('Restore operation completed successfully');
   });
 
@@ -353,7 +377,9 @@ describe('env-twin enhanced restore edge cases', () => {
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR2=modified\n');
 
     // Restore should work on all platforms
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
+      cwd: testDir,
+    }).toString();
     expect(output).toContain('Restore operation completed successfully');
 
     // Verify restoration worked
@@ -381,8 +407,15 @@ describe('env-twin sync command', () => {
   });
 
   beforeEach(() => {
-    const envFiles = ['.env', '.env.local', '.env.development', '.env.testing', '.env.staging', '.env.example'];
-    envFiles.forEach((file) => {
+    const envFiles = [
+      '.env',
+      '.env.local',
+      '.env.development',
+      '.env.testing',
+      '.env.staging',
+      '.env.example',
+    ];
+    envFiles.forEach(file => {
       const filePath = path.join(testDir, file);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -520,7 +553,9 @@ VAR2=value2
 
   test('should handle no .env files gracefully', () => {
     // Don't create any .env files
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, {
+      cwd: testDir,
+    }).toString();
     expect(output).toContain('No .env* files found');
   });
 
@@ -556,7 +591,7 @@ VAR2=value2
     expect(backupFiles.length).toBeGreaterThan(0);
 
     // Verify backup files have correct naming pattern
-    const hasEnvBackup = backupFiles.some((f) => f.startsWith('.env.'));
+    const hasEnvBackup = backupFiles.some(f => f.startsWith('.env.'));
     expect(hasEnvBackup).toBe(true);
   });
 
@@ -597,7 +632,9 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified_value\n');
 
     // Restore from backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} restore ${timestamp} --yes`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} restore ${timestamp} --yes`, {
+      cwd: testDir,
+    });
 
     // Verify original values were restored
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -613,12 +650,12 @@ VAR2=value2
     execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
 
     // List backups
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, { cwd: testDir }).toString();
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, {
+      cwd: testDir,
+    }).toString();
     expect(output).toContain('Available backups');
     expect(output).toContain('.env');
   });
-
-
 
   test('should clean old backups', () => {
     // Create test files
@@ -639,7 +676,10 @@ VAR2=value2
     const initialBackupCount = backupFiles.length;
 
     // Clean backups keeping only 1
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} clean-backups --keep 1 --yes`, { cwd: testDir }).toString();
+    const output = execSync(
+      `bun ${path.join(__dirname, 'index.ts')} clean-backups --keep 1 --yes`,
+      { cwd: testDir }
+    ).toString();
     // The output should contain either "Cleanup completed successfully" or "No backups to delete"
     expect(output).toMatch(/Cleanup completed successfully|No backups to delete/);
 
