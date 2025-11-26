@@ -50,14 +50,16 @@ export async function runCleanBackups(options: CleanBackupsOptions = {}): Promis
   console.log(`You have ${backups.length} backup(s). Keeping ${keepCount} most recent.`);
   console.log('');
   console.log('Backups to delete:');
-  backupsToDelete.forEach((backup) => {
+  backupsToDelete.forEach(backup => {
     console.log(`  - ${formatTimestamp(backup.timestamp)} (${backup.files.join(', ')})`);
   });
   console.log('');
 
   if (!options.yes) {
     console.log('To skip this confirmation, use: env-twin clean-backups --yes');
-    console.log('To keep a different number of backups, use: env-twin clean-backups --keep <number>');
+    console.log(
+      'To keep a different number of backups, use: env-twin clean-backups --keep <number>'
+    );
     console.log('');
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -85,4 +87,3 @@ export async function runCleanBackups(options: CleanBackupsOptions = {}): Promis
   console.log('');
   console.log('Cleanup completed successfully!');
 }
-

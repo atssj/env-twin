@@ -26,14 +26,21 @@ interface ParsedEnvLine {
 // CONSTANTS
 // ============================================================================
 
-const ENV_FILES = ['.env', '.env.local', '.env.development', '.env.testing', '.env.staging', '.env.example'];
+const ENV_FILES = [
+  '.env',
+  '.env.local',
+  '.env.development',
+  '.env.testing',
+  '.env.staging',
+  '.env.example',
+];
 
 // ============================================================================
 // FILE DISCOVERY
 // ============================================================================
 
 function discoverEnvFiles(cwd: string): EnvFileInfo[] {
-  return ENV_FILES.map((fileName) => {
+  return ENV_FILES.map(fileName => {
     const filePath = path.join(cwd, fileName);
     const exists = fs.existsSync(filePath);
     return {
@@ -91,7 +98,9 @@ function readEnvFile(filePath: string): string[] {
     const content = fs.readFileSync(filePath, 'utf-8');
     return content.split('\n');
   } catch (error) {
-    console.error(`Warning: Failed to read ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Warning: Failed to read ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
+    );
     return [];
   }
 }
@@ -139,7 +148,9 @@ function getExistingKeys(filePath: string): Set<string> {
 function mergeEnvFile(filePath: string, allKeys: Set<string>, isExample: boolean): string {
   const lines = readEnvFile(filePath);
   const existingKeys = getExistingKeys(filePath);
-  const missingKeys = Array.from(allKeys).filter((key) => !existingKeys.has(key)).sort();
+  const missingKeys = Array.from(allKeys)
+    .filter(key => !existingKeys.has(key))
+    .sort();
 
   // Build the merged content
   let mergedLines = [...lines];
@@ -178,7 +189,9 @@ function writeEnvFile(filePath: string, content: string): boolean {
     fs.writeFileSync(filePath, content, 'utf-8');
     return true;
   } catch (error) {
-    console.error(`Error: Failed to write ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: Failed to write ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -190,7 +203,7 @@ function writeEnvFile(filePath: string, content: string): boolean {
 export function runSync(options: { noBackup?: boolean } = {}): void {
   const cwd = process.cwd();
   const envFiles = discoverEnvFiles(cwd);
-  const existingFiles = envFiles.filter((f) => f.exists);
+  const existingFiles = envFiles.filter(f => f.exists);
 
   if (existingFiles.length === 0) {
     console.log('No .env* files found in the current directory.');
@@ -199,16 +212,18 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
   }
 
   console.log(`Found ${existingFiles.length} .env* file(s):`);
-  existingFiles.forEach((f) => console.log(`  - ${f.fileName}`));
+  existingFiles.forEach(f => console.log(`  - ${f.fileName}`));
   console.log('');
 
   // Create backups before modifying files
   let backupTimestamp: string | null = null;
   if (!options.noBackup) {
-    const filesToBackup = existingFiles.map((f) => f.filePath);
+    const filesToBackup = existingFiles.map(f => f.filePath);
     backupTimestamp = createBackups(filesToBackup, cwd);
     if (backupTimestamp) {
-      console.log(`✓ Created backup in ${path.join(path.basename(cwd), '.env-twin')} (timestamp: ${backupTimestamp})`);
+      console.log(
+        `✓ Created backup in ${path.join(path.basename(cwd), '.env-twin')} (timestamp: ${backupTimestamp})`
+      );
       console.log('');
     }
   }
@@ -232,7 +247,7 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
 
     const isExample = file.fileName === '.env.example';
     const existingKeys = getExistingKeys(file.filePath);
-    const missingKeys = Array.from(allKeys).filter((key) => !existingKeys.has(key));
+    const missingKeys = Array.from(allKeys).filter(key => !existingKeys.has(key));
 
     if (missingKeys.length > 0) {
       const mergedContent = mergeEnvFile(file.filePath, allKeys, isExample);
@@ -251,7 +266,7 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
   }
 
   // Create .env.example if it doesn't exist
-  const exampleFile = envFiles.find((f) => f.fileName === '.env.example');
+  const exampleFile = envFiles.find(f => f.fileName === '.env.example');
   if (!exampleFile?.exists) {
     const sanitizeKey = (key: string): string => {
       return key
@@ -263,7 +278,7 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
 
     const exampleContent = Array.from(allKeys)
       .sort()
-      .map((key) => `${key}=input_${sanitizeKey(key)}`)
+      .map(key => `${key}=input_${sanitizeKey(key)}`)
       .join('\n');
 
     if (exampleContent) {
@@ -278,7 +293,7 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
 
   // Print summary
   console.log('Sync Summary:');
-  syncResults.forEach((result) => {
+  syncResults.forEach(result => {
     if (result.added > 0) {
       console.log(`  ✓ ${result.fileName}: Added ${result.added} variable(s)`);
     } else {
@@ -294,4 +309,3 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
     console.log('Tip: You can restore from backup using: env-twin restore');
   }
 }
-

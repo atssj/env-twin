@@ -11,7 +11,7 @@ export enum LogLevel {
   INFO = 1,
   WARN = 2,
   ERROR = 3,
-  FATAL = 4
+  FATAL = 4,
 }
 
 export interface LogEntry {
@@ -151,7 +151,12 @@ export class Logger {
   /**
    * Core logging method
    */
-  private log(level: LogLevel, message: string, context?: Record<string, any>, error?: Error): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, any>,
+    error?: Error
+  ): void {
     if (level < this.level) {
       return;
     }
@@ -163,14 +168,14 @@ export class Logger {
       message,
       context: { ...this.context, ...context },
       module: 'restore',
-      operationId: this.operationId
+      operationId: this.operationId,
     };
 
     if (error) {
       entry.error = {
         name: error.name,
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       };
     }
 
@@ -187,7 +192,7 @@ export class Logger {
           this.logToConsole({
             ...entry,
             level: LogLevel.ERROR,
-            message: `Failed to write to log file: ${err instanceof Error ? err.message : String(err)}`
+            message: `Failed to write to log file: ${err instanceof Error ? err.message : String(err)}`,
           });
         }
       });
@@ -242,7 +247,6 @@ export class Logger {
       // Write log entry
       const formatted = this.formatEntry(entry) + '\n';
       fs.appendFileSync(this.logFile, formatted);
-
     } catch (error) {
       // Re-throw to be handled by caller
       throw error;
@@ -286,7 +290,6 @@ export class Logger {
       if (fs.existsSync(this.logFile)) {
         fs.renameSync(this.logFile, `${logPattern}1`);
       }
-
     } catch (error) {
       // Silent fail for rotation
     }
@@ -328,7 +331,7 @@ export class Logger {
       logFile: this.logFile,
       maxFileSize: this.maxFileSize,
       maxFiles: this.maxFiles,
-      context: { ...this.context, ...context }
+      context: { ...this.context, ...context },
     });
 
     childLogger.operationId = this.operationId;
@@ -351,7 +354,7 @@ export class Logger {
     this.info('Restore operation started', {
       targetTimestamp: timestamp,
       files,
-      fileCount: files?.length || 0
+      fileCount: files?.length || 0,
     });
   }
 
@@ -363,46 +366,61 @@ export class Logger {
       success,
       restoredFiles: restored,
       failedFiles: failed,
-      errors
+      errors,
     });
   }
 
   /**
    * Log file operation details
    */
-  logFileOperation(operation: 'backup' | 'restore' | 'validate' | 'rollback', fileName: string, success: boolean, details?: Record<string, any>): void {
+  logFileOperation(
+    operation: 'backup' | 'restore' | 'validate' | 'rollback',
+    fileName: string,
+    success: boolean,
+    details?: Record<string, any>
+  ): void {
     this.info(`File ${operation}: ${fileName}`, {
       operation,
       fileName,
       success,
-      ...details
+      ...details,
     });
   }
 
   /**
    * Log validation results
    */
-  logValidationResults(timestamp: string, isValid: boolean, errors: string[], warnings: string[]): void {
+  logValidationResults(
+    timestamp: string,
+    isValid: boolean,
+    errors: string[],
+    warnings: string[]
+  ): void {
     this.info(`Backup validation completed for ${timestamp}`, {
       timestamp,
       isValid,
       errorCount: errors.length,
       warningCount: warnings.length,
       errors,
-      warnings
+      warnings,
     });
   }
 
   /**
    * Log rollback operation
    */
-  logRollback(rollbackId: string, success: boolean, filesRolledBack?: string[], error?: string): void {
+  logRollback(
+    rollbackId: string,
+    success: boolean,
+    filesRolledBack?: string[],
+    error?: string
+  ): void {
     const logLevel = success ? LogLevel.INFO : LogLevel.WARN;
     this.log(logLevel, `Rollback operation ${success ? 'completed' : 'failed'}`, {
       rollbackId,
       success,
       filesRolledBack,
-      error
+      error,
     });
   }
 
@@ -415,7 +433,7 @@ export class Logger {
       total,
       percentage: Math.round((current / total) * 100),
       phase,
-      currentFile
+      currentFile,
     });
   }
 
@@ -440,7 +458,7 @@ export class Logger {
 export const logger = Logger.getInstance({
   level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
   enableConsole: true,
-  enableFile: true
+  enableFile: true,
 });
 
 /**
@@ -459,7 +477,7 @@ export class RestoreLogger {
   logBackupDiscovery(backupCount: number, validCount: number): void {
     this.logger.info(`Discovered ${backupCount} backups (${validCount} valid)`, {
       totalBackups: backupCount,
-      validBackups: validCount
+      validBackups: validCount,
     });
   }
 
@@ -468,7 +486,7 @@ export class RestoreLogger {
    */
   logMostRecentSelection(timestamp: string): void {
     this.logger.info(`Selected most recent backup: ${timestamp}`, {
-      selectedTimestamp: timestamp
+      selectedTimestamp: timestamp,
     });
   }
 
@@ -477,7 +495,7 @@ export class RestoreLogger {
    */
   logUserConfirmation(userConfirmed: boolean): void {
     this.logger.info(`User ${userConfirmed ? 'confirmed' : 'cancelled'} restore operation`, {
-      userConfirmed
+      userConfirmed,
     });
   }
 
@@ -485,10 +503,13 @@ export class RestoreLogger {
    * Log file permissions preservation
    */
   logPermissionsPreservation(fileName: string, preserved: boolean): void {
-    this.logger.debug(`File permissions ${preserved ? 'preserved' : 'not preserved'} for ${fileName}`, {
-      fileName,
-      preserved
-    });
+    this.logger.debug(
+      `File permissions ${preserved ? 'preserved' : 'not preserved'} for ${fileName}`,
+      {
+        fileName,
+        preserved,
+      }
+    );
   }
 
   /**
@@ -501,7 +522,7 @@ export class RestoreLogger {
     this.logger.info(`Running on platform: ${platform} (${arch})`, {
       platform,
       architecture: arch,
-      supportsPermissions: platform !== 'win32'
+      supportsPermissions: platform !== 'win32',
     });
   }
 }

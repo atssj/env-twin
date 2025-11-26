@@ -35,7 +35,7 @@ export interface RollbackResult {
 }
 
 export interface RollbackOptions {
-  includeContent?: boolean;  // Include file content (larger but more reliable)
+  includeContent?: boolean; // Include file content (larger but more reliable)
   includePermissions?: boolean; // Include file permissions
   compress?: boolean; // Compress content to save space
   maxSize?: number; // Maximum size per file to include (in bytes)
@@ -63,7 +63,7 @@ export class RollbackManager {
       includeContent = true,
       includePermissions = true,
       compress = false,
-      maxSize = 1024 * 1024 // 1MB default
+      maxSize = 1024 * 1024, // 1MB default
     } = options;
 
     return new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ export class RollbackManager {
           timestamp,
           createdAt,
           files: [],
-          cwd: this.cwd
+          cwd: this.cwd,
         };
 
         // Ensure rollback directory exists
@@ -91,12 +91,12 @@ export class RollbackManager {
 
         // Process each file
         const processFile = (fileName: string): Promise<RollbackFile> => {
-          return new Promise((resolveFile) => {
+          return new Promise(resolveFile => {
             const filePath = path.join(this.cwd, fileName);
             const rollbackFile: RollbackFile = {
               fileName,
               filePath,
-              exists: fs.existsSync(filePath)
+              exists: fs.existsSync(filePath),
             };
 
             if (!rollbackFile.exists) {
@@ -132,7 +132,7 @@ export class RollbackManager {
 
         // Process all files
         Promise.all(files.map(processFile))
-          .then((processedFiles) => {
+          .then(processedFiles => {
             snapshot.files = processedFiles;
 
             // Save file contents to snapshot directory
@@ -158,10 +158,10 @@ export class RollbackManager {
                 exists: f.exists,
                 size: f.size,
                 permissions: f.permissions,
-                hasContent: !!f.content
+                hasContent: !!f.content,
               })),
               cwd: snapshot.cwd,
-              options
+              options,
             };
 
             fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
@@ -172,7 +172,6 @@ export class RollbackManager {
             resolve(snapshot);
           })
           .catch(reject);
-
       } catch (error) {
         reject(error);
       }
@@ -189,7 +188,7 @@ export class RollbackManager {
       if (!fs.existsSync(snapshotDir)) {
         return {
           success: false,
-          error: `Rollback snapshot ${snapshotId} not found`
+          error: `Rollback snapshot ${snapshotId} not found`,
         };
       }
 
@@ -198,7 +197,7 @@ export class RollbackManager {
       if (!fs.existsSync(metadataPath)) {
         return {
           success: false,
-          error: `Rollback snapshot metadata not found for ${snapshotId}`
+          error: `Rollback snapshot metadata not found for ${snapshotId}`,
         };
       }
 
@@ -208,7 +207,7 @@ export class RollbackManager {
         timestamp: metadata.timestamp,
         createdAt: new Date(metadata.createdAt),
         files: [], // We'll reload files from individual files
-        cwd: metadata.cwd
+        cwd: metadata.cwd,
       };
 
       const rolledBackFiles: string[] = [];
@@ -251,7 +250,6 @@ export class RollbackManager {
               rolledBackFiles.push(fileInfo.fileName);
             }
           }
-
         } catch (error) {
           // Continue with other files
         }
@@ -260,13 +258,12 @@ export class RollbackManager {
       return {
         success: true,
         snapshotId,
-        rolledBackFiles
+        rolledBackFiles,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -297,7 +294,7 @@ export class RollbackManager {
                 timestamp: metadata.timestamp,
                 createdAt: new Date(metadata.createdAt),
                 files: metadata.files || [],
-                cwd: metadata.cwd
+                cwd: metadata.cwd,
               });
             } catch (error) {
               // Skip invalid snapshots
@@ -308,7 +305,6 @@ export class RollbackManager {
 
       // Sort by creation date (newest first)
       return snapshots.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
     } catch (error) {
       return [];
     }
@@ -333,9 +329,8 @@ export class RollbackManager {
         timestamp: metadata.timestamp,
         createdAt: new Date(metadata.createdAt),
         files: metadata.files || [],
-        cwd: metadata.cwd
+        cwd: metadata.cwd,
       };
-
     } catch (error) {
       return null;
     }
@@ -355,7 +350,6 @@ export class RollbackManager {
       // Remove directory and all contents
       fs.rmSync(snapshotDir, { recursive: true, force: true });
       return true;
-
     } catch (error) {
       return false;
     }
@@ -377,7 +371,6 @@ export class RollbackManager {
       for (const snapshot of snapshotsToDelete) {
         this.deleteSnapshot(snapshot.id);
       }
-
     } catch (error) {
       // Silent fail for cleanup
     }
@@ -411,7 +404,6 @@ export class RollbackManager {
       }
 
       return { totalSize, fileCount };
-
     } catch (error) {
       return { totalSize: 0, fileCount: 0 };
     }
@@ -454,7 +446,7 @@ export class RollbackManager {
             // Normalize mtime to handle cases where it's a string from JSON
             const snapshotMtime = fileInfo.stats?.mtime;
             let snapshotMtimeMs: number;
-            
+
             if (snapshotMtime instanceof Date) {
               snapshotMtimeMs = snapshotMtime.getTime();
             } else if (typeof snapshotMtime === 'string') {
@@ -464,15 +456,16 @@ export class RollbackManager {
             } else {
               snapshotMtimeMs = 0;
             }
-            
-            const currentTimeMs = stats.mtime instanceof Date ? stats.mtime.getTime() : new Date(stats.mtime).getTime();
+
+            const currentTimeMs =
+              stats.mtime instanceof Date ? stats.mtime.getTime() : new Date(stats.mtime).getTime();
             const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
-            
-            if (timeDiff > 1000) { // 1 second tolerance
+
+            if (timeDiff > 1000) {
+              // 1 second tolerance
               changedFiles.push(fileInfo.fileName);
             }
           }
-
         } catch (error) {
           // File access error indicates potential invalidation
           changedFiles.push(fileInfo.fileName);
@@ -481,9 +474,8 @@ export class RollbackManager {
 
       return {
         isValid: changedFiles.length === 0,
-        changedFiles
+        changedFiles,
       };
-
     } catch (error) {
       return { isValid: false, changedFiles: [] };
     }
@@ -543,7 +535,11 @@ export class RollbackUtils {
   /**
    * Atomically replace file with rollback capability
    */
-  static atomicFileReplace(originalPath: string, newContent: string, backupContent?: string): { success: boolean; rollbackPath?: string } {
+  static atomicFileReplace(
+    originalPath: string,
+    newContent: string,
+    backupContent?: string
+  ): { success: boolean; rollbackPath?: string } {
     try {
       let rollbackPath: string | undefined;
 
@@ -559,7 +555,6 @@ export class RollbackUtils {
       fs.writeFileSync(originalPath, newContent, 'utf-8');
 
       return { success: true, rollbackPath };
-
     } catch (error) {
       return { success: false };
     }
