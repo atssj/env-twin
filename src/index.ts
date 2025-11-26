@@ -425,7 +425,7 @@ try {
   } else if (command === 'clean-backups') {
     // Import and run clean-backups command
     const { runCleanBackups } = await import('./commands/clean-backups.js');
-    runCleanBackups({
+    await runCleanBackups({
       keep: options.keep,
       yes: options.yes,
     });
