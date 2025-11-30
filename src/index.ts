@@ -59,7 +59,7 @@ const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   CREATE_ROLLBACK: ['--create-rollback', '--rollback'],
   FORCE: ['--force', '-f'],
   DRY_RUN: ['--dry-run', '--simulate'],
-  VERBOSE: ['--verbose', '-v'],
+  VERBOSE: ['--verbose', '-V'],
 } as const;
 
 // ============================================================================
@@ -262,7 +262,7 @@ Options:
   --create-rollback      Create pre-restore snapshot for rollback capability
   --force, -f            Force restore without checking for changes
   --dry-run, --simulate  Show what would be restored without making changes
-  --verbose, -v          Enable verbose logging
+  --verbose, -V          Enable verbose logging
   --help, -h             Display this help message
 
 Enhanced Features:
