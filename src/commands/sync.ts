@@ -142,6 +142,23 @@ function getExistingKeys(filePath: string): Set<string> {
 }
 
 // ============================================================================
+// KEY SANITIZATION
+// ============================================================================
+
+/**
+ * Sanitize a key name for use in placeholder values.
+ * Converts to lowercase, replaces non-alphanumeric characters with underscores,
+ * collapses multiple underscores, and trims leading/trailing underscores.
+ */
+function sanitizeKey(key: string): string {
+  return key
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+// ============================================================================
 // FILE MERGING
 // ============================================================================
 
@@ -165,12 +182,7 @@ function mergeEnvFile(filePath: string, allKeys: Set<string>, isExample: boolean
     for (const key of missingKeys) {
       if (isExample) {
         // For .env.example, use a sanitized placeholder
-        const sanitizedKey = key
-          .toLowerCase()
-          .replace(/[^a-z0-9_]/g, '_')
-          .replace(/_{2,}/g, '_')
-          .replace(/^_|_$/g, '');
-        mergedLines.push(`${key}=input_${sanitizedKey}`);
+        mergedLines.push(`${key}=input_${sanitizeKey(key)}`);
       } else {
         mergedLines.push(`${key}=`);
       }
@@ -268,14 +280,6 @@ export function runSync(options: { noBackup?: boolean } = {}): void {
   // Create .env.example if it doesn't exist
   const exampleFile = envFiles.find(f => f.fileName === '.env.example');
   if (!exampleFile?.exists) {
-    const sanitizeKey = (key: string): string => {
-      return key
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '_')
-        .replace(/_{2,}/g, '_')
-        .replace(/^_|_$/g, '');
-    };
-
     const exampleContent = Array.from(allKeys)
       .sort()
       .map(key => `${key}=input_${sanitizeKey(key)}`)

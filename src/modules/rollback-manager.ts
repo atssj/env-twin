@@ -387,23 +387,33 @@ export class RollbackManager {
         return { totalSize: 0, fileCount: 0 };
       }
 
-      const entries = fs.readdirSync(snapshotDir);
-      let totalSize = 0;
-      let fileCount = entries.length;
+      // Recursive helper to walk directory tree
+      const walkDir = (dir: string): { totalSize: number; fileCount: number } => {
+        let totalSize = 0;
+        let fileCount = 0;
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-      for (const entry of entries) {
-        const entryPath = path.join(snapshotDir, entry);
-        if (fs.existsSync(entryPath)) {
+        for (const entry of entries) {
+          const entryPath = path.join(dir, entry.name);
           try {
-            const stats = fs.statSync(entryPath);
-            totalSize += stats.size;
-          } catch (error) {
-            // Continue
+            if (entry.isDirectory()) {
+              const sub = walkDir(entryPath);
+              totalSize += sub.totalSize;
+              fileCount += sub.fileCount;
+            } else {
+              const stats = fs.statSync(entryPath);
+              totalSize += stats.size;
+              fileCount += 1;
+            }
+          } catch {
+            // Continue on error
           }
         }
-      }
 
-      return { totalSize, fileCount };
+        return { totalSize, fileCount };
+      };
+
+      return walkDir(snapshotDir);
     } catch (error) {
       return { totalSize: 0, fileCount: 0 };
     }
