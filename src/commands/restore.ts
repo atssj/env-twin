@@ -39,6 +39,12 @@ export interface RestoreSession {
   options: EnhancedRestoreOptions;
 }
 
+export interface FileInspectionInfo {
+  fileName: string;
+  exists: boolean;
+  modifiedTime?: string;
+}
+
 // ============================================================================
 // ENHANCED RESTORE COMMAND
 // ============================================================================
@@ -288,11 +294,11 @@ async function selectBackup(
 async function inspectSelectedBackup(
   session: RestoreSession,
   restoreLogger: RestoreLogger
-): Promise<{ inspected: boolean; fileInfo: { fileName: string; exists: boolean; modifiedTime?: string }[] }> {
+): Promise<FileInspectionInfo[]> {
   console.log('🔍 Inspecting selected backup...');
 
   const backup = session.selectedBackup as any;
-  const fileInfo: { fileName: string; exists: boolean; modifiedTime?: string }[] = [];
+  const fileInfo: FileInspectionInfo[] = [];
 
   // Inspect each file in backup
   for (const fileName of backup.files) {
@@ -311,7 +317,7 @@ async function inspectSelectedBackup(
     }
   }
 
-  return { inspected: true, fileInfo };
+  return fileInfo;
 }
 
 /**
