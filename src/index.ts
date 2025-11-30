@@ -160,9 +160,17 @@ function parseArgs(): ParsedArgs {
       default:
         if (arg.startsWith('-')) {
           throw new Error(`Unknown option '${arg}'`);
-        } else if (!params.timestamp) {
-          // Capture first non-flag argument as timestamp (for restore command)
-          params.timestamp = arg;
+        } else if (command === 'restore') {
+          if (!params.timestamp) {
+            params.timestamp = arg;
+          } else {
+            throw new Error(`Unexpected argument '${arg}'. Only one timestamp argument is allowed for 'restore'.`);
+          }
+        } else {
+          const cmdName = command || 'default';
+          throw new Error(
+            `Unexpected argument '${arg}'. The '${cmdName}' command does not accept positional arguments.`
+          );
         }
     }
   }
