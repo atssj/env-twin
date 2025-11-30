@@ -159,6 +159,7 @@ export class RollbackManager {
                 size: f.size,
                 permissions: f.permissions,
                 hasContent: !!f.content,
+                mtimeMs: f.stats ? f.stats.mtimeMs : undefined,
               })),
               cwd: snapshot.cwd,
               options,
@@ -293,7 +294,13 @@ export class RollbackManager {
                 id: metadata.id,
                 timestamp: metadata.timestamp,
                 createdAt: new Date(metadata.createdAt),
-                files: metadata.files || [],
+                files: (metadata.files || []).map((f: any) => ({
+                  ...f,
+                  stats:
+                    f.mtimeMs !== undefined
+                      ? ({ mtime: new Date(f.mtimeMs), mtimeMs: f.mtimeMs } as unknown as fs.Stats)
+                      : undefined,
+                })),
                 cwd: metadata.cwd,
               });
             } catch (error) {
@@ -328,7 +335,13 @@ export class RollbackManager {
         id: metadata.id,
         timestamp: metadata.timestamp,
         createdAt: new Date(metadata.createdAt),
-        files: metadata.files || [],
+        files: (metadata.files || []).map((f: any) => ({
+          ...f,
+          stats:
+            f.mtimeMs !== undefined
+              ? ({ mtime: new Date(f.mtimeMs), mtimeMs: f.mtimeMs } as unknown as fs.Stats)
+              : undefined,
+        })),
         cwd: metadata.cwd,
       };
     } catch (error) {
@@ -455,25 +468,30 @@ export class RollbackManager {
             // Check if modification time changed significantly
             // Normalize mtime to handle cases where it's a string from JSON
             const snapshotMtime = fileInfo.stats?.mtime;
-            let snapshotMtimeMs: number;
 
-            if (snapshotMtime instanceof Date) {
-              snapshotMtimeMs = snapshotMtime.getTime();
-            } else if (typeof snapshotMtime === 'string') {
-              snapshotMtimeMs = new Date(snapshotMtime).getTime();
-            } else if (typeof snapshotMtime === 'number') {
-              snapshotMtimeMs = snapshotMtime;
-            } else {
-              snapshotMtimeMs = 0;
-            }
+            if (snapshotMtime != null) {
+              let snapshotMtimeMs: number;
 
-            const currentTimeMs =
-              stats.mtime instanceof Date ? stats.mtime.getTime() : new Date(stats.mtime).getTime();
-            const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
+              if (snapshotMtime instanceof Date) {
+                snapshotMtimeMs = snapshotMtime.getTime();
+              } else if (typeof snapshotMtime === 'string') {
+                snapshotMtimeMs = new Date(snapshotMtime).getTime();
+              } else if (typeof snapshotMtime === 'number') {
+                snapshotMtimeMs = snapshotMtime;
+              } else {
+                snapshotMtimeMs = 0;
+              }
 
-            if (timeDiff > 1000) {
-              // 1 second tolerance
-              changedFiles.push(fileInfo.fileName);
+              const currentTimeMs =
+                stats.mtime instanceof Date
+                  ? stats.mtime.getTime()
+                  : new Date(stats.mtime).getTime();
+              const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
+
+              if (timeDiff > 1000) {
+                // 1 second tolerance
+                changedFiles.push(fileInfo.fileName);
+              }
             }
           }
         } catch (error) {
