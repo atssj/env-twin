@@ -478,7 +478,7 @@ export class RollbackManager {
             const snapshotMtime = fileInfo.stats?.mtime;
 
             if (snapshotMtime != null) {
-              let snapshotMtimeMs: number;
+              let snapshotMtimeMs: number | undefined;
 
               if (snapshotMtime instanceof Date) {
                 snapshotMtimeMs = snapshotMtime.getTime();
@@ -486,19 +486,19 @@ export class RollbackManager {
                 snapshotMtimeMs = new Date(snapshotMtime).getTime();
               } else if (typeof snapshotMtime === 'number') {
                 snapshotMtimeMs = snapshotMtime;
-              } else {
-                snapshotMtimeMs = 0;
               }
 
-              const currentTimeMs =
-                stats.mtime instanceof Date
-                  ? stats.mtime.getTime()
-                  : new Date(stats.mtime).getTime();
-              const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
+              if (snapshotMtimeMs !== undefined) {
+                const currentTimeMs =
+                  stats.mtime instanceof Date
+                    ? stats.mtime.getTime()
+                    : new Date(stats.mtime).getTime();
+                const timeDiff = Math.abs(currentTimeMs - snapshotMtimeMs);
 
-              if (timeDiff > 1000) {
-                // 1 second tolerance
-                changedFiles.push(fileInfo.fileName);
+                if (timeDiff > 1000) {
+                  // 1 second tolerance
+                  changedFiles.push(fileInfo.fileName);
+                }
               }
             }
           }
