@@ -17,6 +17,8 @@ export interface RollbackSnapshot {
   cwd: string;
 }
 
+export type PartialStats = Pick<fs.Stats, 'mtime' | 'mtimeMs'>;
+
 export interface RollbackFile {
   fileName: string;
   filePath: string;
@@ -24,7 +26,7 @@ export interface RollbackFile {
   size?: number;
   content?: string;
   permissions?: fs.Mode;
-  stats?: fs.Stats;
+  stats?: fs.Stats | PartialStats;
 }
 
 export interface RollbackResult {
@@ -294,13 +296,7 @@ export class RollbackManager {
                 id: metadata.id,
                 timestamp: metadata.timestamp,
                 createdAt: new Date(metadata.createdAt),
-                files: (metadata.files || []).map((f: any) => ({
-                  ...f,
-                  stats:
-                    f.mtimeMs !== undefined
-                      ? ({ mtime: new Date(f.mtimeMs), mtimeMs: f.mtimeMs } as unknown as fs.Stats)
-                      : undefined,
-                })),
+                files: (metadata.files || []).map((f: any) => this.reconstructSnapshotFile(f)),
                 cwd: metadata.cwd,
               });
             } catch (error) {
@@ -335,13 +331,7 @@ export class RollbackManager {
         id: metadata.id,
         timestamp: metadata.timestamp,
         createdAt: new Date(metadata.createdAt),
-        files: (metadata.files || []).map((f: any) => ({
-          ...f,
-          stats:
-            f.mtimeMs !== undefined
-              ? ({ mtime: new Date(f.mtimeMs), mtimeMs: f.mtimeMs } as unknown as fs.Stats)
-              : undefined,
-        })),
+        files: (metadata.files || []).map((f: any) => this.reconstructSnapshotFile(f)),
         cwd: metadata.cwd,
       };
     } catch (error) {
@@ -430,6 +420,24 @@ export class RollbackManager {
     } catch (error) {
       return { totalSize: 0, fileCount: 0 };
     }
+  }
+
+  /**
+   * Reconstruct file with stats from metadata
+   */
+  private reconstructSnapshotFile(fileMetadata: any): RollbackFile {
+    const stats: PartialStats | undefined =
+      fileMetadata.mtimeMs !== undefined
+        ? {
+            mtime: new Date(fileMetadata.mtimeMs),
+            mtimeMs: fileMetadata.mtimeMs,
+          }
+        : undefined;
+
+    return {
+      ...fileMetadata,
+      stats,
+    };
   }
 
   /**
