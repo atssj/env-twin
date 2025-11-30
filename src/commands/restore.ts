@@ -137,11 +137,8 @@ async function runRestoreProcess(
   session.selectedBackup = selectedBackup;
   session.filesToRestore = selectedBackup.files;
 
-  // Step 4: Validate selected backup
-  const validationResult = await validateSelectedBackup(session, restoreLogger);
-  if (!validationResult.isValid) {
-    throw new Error(`Selected backup is invalid: ${validationResult.errors.join(', ')}`);
-  }
+  // Step 4: Inspect selected backup (informational step)
+  await inspectSelectedBackup(session, restoreLogger);
 
   // Step 5: Check for changes and create rollback if needed
   if (session.options.createRollback && !dryRun) {
@@ -164,9 +161,7 @@ async function runRestoreProcess(
   // Step 7: Perform the restore
   await performRestore(session, restoreLogger);
 
-  // Step 8: Complete operation
-  console.log('\n✅ Restore operation completed successfully!');
-  logger.logRestoreComplete(true, session.filesToRestore.length, 0);
+  // Final status is handled by performRestore function
 }
 
 /**
@@ -287,18 +282,19 @@ async function selectBackup(
 }
 
 /**
- * Validate the selected backup
+ * Inspect the selected backup and display information about target files.
+ * This is an informational step that shows which files will be created or overwritten.
  */
-async function validateSelectedBackup(
+async function inspectSelectedBackup(
   session: RestoreSession,
   restoreLogger: RestoreLogger
-): Promise<{ isValid: boolean; errors: string[] }> {
-  console.log('🔍 Validating selected backup...');
+): Promise<{ inspected: boolean; fileInfo: { fileName: string; exists: boolean; modifiedTime?: string }[] }> {
+  console.log('🔍 Inspecting selected backup...');
 
   const backup = session.selectedBackup as any;
-  const errors: string[] = [];
+  const fileInfo: { fileName: string; exists: boolean; modifiedTime?: string }[] = [];
 
-  // Validate each file in backup
+  // Inspect each file in backup
   for (const fileName of backup.files) {
     const filePath = path.join(process.cwd(), fileName);
 
@@ -308,12 +304,14 @@ async function validateSelectedBackup(
       const stats = fs.statSync(filePath);
       const modifiedTime = stats.mtime.toISOString();
       console.log(`   ⚠️  ${fileName} exists (last modified: ${modifiedTime})`);
+      fileInfo.push({ fileName, exists: true, modifiedTime });
     } else {
       console.log(`   ✅ ${fileName} will be created`);
+      fileInfo.push({ fileName, exists: false });
     }
   }
 
-  return { isValid: errors.length === 0, errors };
+  return { inspected: true, fileInfo };
 }
 
 /**
