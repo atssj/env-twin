@@ -17,6 +17,7 @@
   "scripts": {
     "test": "bun test",
     "build": "tsc",
+    "type-check": "tsc --noEmit",
     "start": "bun dist/index.js",
     "lint:format": "prettier --write .",
     "changeset": "changeset",
