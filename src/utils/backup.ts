@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { ensureBackupDirInGitignore } from './gitignore.js';
 
 // ============================================================================
 // TYPES
@@ -38,6 +39,10 @@ function ensureBackupDir(cwd: string): boolean {
     if (!fs.existsSync(backupPath)) {
       fs.mkdirSync(backupPath, { recursive: true });
     }
+
+    // Ensure backup directory is in .gitignore
+    ensureBackupDirInGitignore(cwd);
+
     return true;
   } catch (error) {
     console.error(
