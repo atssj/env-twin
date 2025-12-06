@@ -426,6 +426,11 @@ describe('env-twin sync command', () => {
     if (fs.existsSync(backupDir)) {
       fs.rmSync(backupDir, { recursive: true, force: true });
     }
+    // Remove gitignore created during tests
+    const gitignorePath = path.join(testDir, '.gitignore');
+    if (fs.existsSync(gitignorePath)) {
+      fs.unlinkSync(gitignorePath);
+    }
   });
 
   test('should sync keys across multiple .env files', () => {
@@ -611,6 +616,34 @@ VAR2=value2
 
     // Verify backup directory was not created
     expect(fs.existsSync(backupDir)).toBe(false);
+  });
+
+  test('should create gitignore entry for backup directory when missing', () => {
+    const gitignorePath = path.join(testDir, '.gitignore');
+    fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+
+    expect(fs.existsSync(gitignorePath)).toBe(true);
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    expect(gitignoreContent).toContain('.env-twin/');
+  });
+
+  test('should append gitignore entry only once to existing gitignore', () => {
+    const gitignorePath = path.join(testDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, 'node_modules/\n');
+    fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+
+    let gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    expect(gitignoreContent).toContain('node_modules/');
+    expect((gitignoreContent.match(/\.env-twin\//g) ?? []).length).toBe(1);
+
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+
+    gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    expect((gitignoreContent.match(/\.env-twin\//g) ?? []).length).toBe(1);
   });
 
   test('should restore from backup', () => {
