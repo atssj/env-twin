@@ -17,6 +17,42 @@ export interface BackupInfo {
 
 export const BACKUP_DIR = '.env-twin';
 
+const GITIGNORE_FILE = '.gitignore';
+const BACKUP_IGNORE_COMMENT = '# env-twin backup directory';
+const BACKUP_IGNORE_LINE = `${BACKUP_DIR}/`;
+const ESCAPED_BACKUP_DIR = BACKUP_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const BACKUP_IGNORE_PATTERN = new RegExp(`^!?\\/?${ESCAPED_BACKUP_DIR}\\/?$`);
+
+function ensureGitignoreEntry(cwd: string): void {
+  const gitignorePath = path.join(cwd, GITIGNORE_FILE);
+
+  try {
+    if (fs.existsSync(gitignorePath)) {
+      const content = fs.readFileSync(gitignorePath, 'utf-8');
+      const lines = content.split(/\r?\n/);
+      const alreadyIgnored = lines.some(line => BACKUP_IGNORE_PATTERN.test(line.trim()));
+
+      if (alreadyIgnored) {
+        return;
+      }
+
+      const needsNewline = content.length > 0 && !content.endsWith('\n');
+      const addition = `${needsNewline ? '\n' : ''}${BACKUP_IGNORE_COMMENT}\n${BACKUP_IGNORE_LINE}\n`;
+      fs.appendFileSync(gitignorePath, addition, 'utf-8');
+    } else {
+      const addition = `${BACKUP_IGNORE_COMMENT}\n${BACKUP_IGNORE_LINE}\n`;
+      fs.writeFileSync(gitignorePath, addition, 'utf-8');
+    }
+  } catch (error) {
+    console.warn(
+      `Warning: Failed to update ${GITIGNORE_FILE} with ${BACKUP_DIR}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -38,6 +74,7 @@ function ensureBackupDir(cwd: string): boolean {
     if (!fs.existsSync(backupPath)) {
       fs.mkdirSync(backupPath, { recursive: true });
     }
+    ensureGitignoreEntry(cwd);
     return true;
   } catch (error) {
     console.error(
