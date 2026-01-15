@@ -37,7 +37,14 @@ function ensureBackupDir(cwd: string): boolean {
   const backupPath = path.join(cwd, BACKUP_DIR);
   try {
     if (!fs.existsSync(backupPath)) {
-      fs.mkdirSync(backupPath, { recursive: true });
+      fs.mkdirSync(backupPath, { recursive: true, mode: 0o700 });
+    } else {
+      // Ensure existing directory has correct permissions
+      try {
+        fs.chmodSync(backupPath, 0o700);
+      } catch (error) {
+        // Ignore chmod errors on Windows or if not owner
+      }
     }
 
     // Ensure backup directory is in .gitignore
@@ -72,7 +79,7 @@ export function createBackup(filePath: string, cwd: string): boolean {
     const backupPath = path.join(cwd, BACKUP_DIR, backupFileName);
 
     const content = fs.readFileSync(filePath, 'utf-8');
-    fs.writeFileSync(backupPath, content, 'utf-8');
+    fs.writeFileSync(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
     return true;
   } catch (error) {
     console.error(
@@ -101,7 +108,7 @@ export function createBackups(filePaths: string[], cwd: string): string | null {
       const backupPath = path.join(cwd, BACKUP_DIR, backupFileName);
 
       const content = fs.readFileSync(filePath, 'utf-8');
-      fs.writeFileSync(backupPath, content, 'utf-8');
+      fs.writeFileSync(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
       successCount++;
     } catch (error) {
       console.error(
