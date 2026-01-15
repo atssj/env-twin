@@ -88,7 +88,7 @@ export class RollbackManager {
         // Create snapshot directory for this snapshot
         const snapshotDir = path.join(this.rollbackDir, snapshotId);
         if (!fs.existsSync(snapshotDir)) {
-          fs.mkdirSync(snapshotDir, { recursive: true });
+          fs.mkdirSync(snapshotDir, { recursive: true, mode: 0o700 });
         }
 
         // Process each file
@@ -143,9 +143,9 @@ export class RollbackManager {
                 const contentPath = path.join(snapshotDir, file.fileName);
                 const contentDir = path.dirname(contentPath);
                 if (!fs.existsSync(contentDir)) {
-                  fs.mkdirSync(contentDir, { recursive: true });
+                  fs.mkdirSync(contentDir, { recursive: true, mode: 0o700 });
                 }
-                fs.writeFileSync(contentPath, file.content, 'utf-8');
+                fs.writeFileSync(contentPath, file.content, { encoding: 'utf-8', mode: 0o600 });
               }
             }
 
@@ -167,7 +167,10 @@ export class RollbackManager {
               options,
             };
 
-            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), {
+              encoding: 'utf-8',
+              mode: 0o600,
+            });
 
             // Clean up old snapshots if necessary
             this.cleanupOldSnapshots();
@@ -531,7 +534,14 @@ export class RollbackManager {
    */
   private ensureRollbackDirectory(): void {
     if (!fs.existsSync(this.rollbackDir)) {
-      fs.mkdirSync(this.rollbackDir, { recursive: true });
+      fs.mkdirSync(this.rollbackDir, { recursive: true, mode: 0o700 });
+    } else {
+      // Ensure existing directory has correct permissions
+      try {
+        fs.chmodSync(this.rollbackDir, 0o700);
+      } catch (error) {
+        // Ignore chmod errors on Windows or if not owner
+      }
     }
   }
 
@@ -564,7 +574,7 @@ export class RollbackUtils {
    */
   static createTempRollbackFile(originalPath: string, content: string): string {
     const tempPath = `${originalPath}.rollback.${Date.now()}`;
-    fs.writeFileSync(tempPath, content, 'utf-8');
+    fs.writeFileSync(tempPath, content, { encoding: 'utf-8', mode: 0o600 });
     return tempPath;
   }
 
