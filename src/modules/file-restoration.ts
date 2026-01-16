@@ -225,9 +225,18 @@ export class FileRestorer {
         }
       }
 
+      // Determine write options
+      const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
+
+      // If file doesn't exist, use secure default permissions for sensitive files
+      // .env files (except .env.example) are considered sensitive
+      if (!currentStats && fileName.startsWith('.env') && fileName !== '.env.example') {
+        writeOptions.mode = 0o600;
+      }
+
       // Write content to target file
       try {
-        fs.writeFileSync(targetFilePath, content, 'utf-8');
+        fs.writeFileSync(targetFilePath, content, writeOptions);
       } catch (error) {
         return { success: false, error: `Cannot write to target file: ${targetFilePath}` };
       }
