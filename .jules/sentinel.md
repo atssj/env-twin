@@ -10,3 +10,7 @@
 **Vulnerability:** Initial implementation of sensitive file detection compiled regex on every call and used inefficient object creation, potentially impacting performance during batch restorations.
 **Learning:** Static properties for regex patterns and optimized object literals improve performance and maintainability.
 **Prevention:** Moved regex to static class property and optimized write options logic.
+## 2024-05-22 - Optimized Sensitive File Detection and Allocation
+**Vulnerability:** Initial implementation of sensitive file detection compiled regex on every call and used inefficient object creation, potentially impacting performance during batch restorations.
+**Learning:** Static properties for regex patterns and optimized object literals improve performance and maintainability.
+**Prevention:** Moved regex to static class property and utilized static constants for write options to avoid redundant object allocation.
