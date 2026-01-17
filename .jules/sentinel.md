@@ -6,3 +6,7 @@
 **Vulnerability:** Narrow sensitive file detection (only checking .env prefix) missed files like .env.local or .env.production, leaving them with default insecure permissions on restore.
 **Learning:** Use robust regex patterns for file classification instead of simple string prefix checks to ensure all variants of sensitive files are captured.
 **Prevention:** Implemented /^\.env(\.|$)/ regex to catch all env variants while excluding .env.example.
+## 2024-05-22 - Optimized Sensitive File Detection
+**Vulnerability:** Initial implementation of sensitive file detection compiled regex on every call and used inefficient object creation, potentially impacting performance during batch restorations.
+**Learning:** Static properties for regex patterns and optimized object literals improve performance and maintainability.
+**Prevention:** Moved regex to static class property and optimized write options logic.

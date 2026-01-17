@@ -42,6 +42,7 @@ export type ProgressCallback = (progress: RestoreProgress) => void;
  * Enhanced file restoration with rollback capability and progress tracking
  */
 export class FileRestorer {
+  private static readonly SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
   private cwd: string;
   private backupDir: string;
   private rollbackManager: any; // Will be set after importing rollback manager
@@ -182,10 +183,7 @@ export class FileRestorer {
   private isSensitiveFile(fileName: string): boolean {
     // Check if it's an environment file (.env, .env.local, .env.production, etc.)
     // But explicitly exclude .env.example which is usually safe
-    const isEnvFile = /^\.env(\.|$)/.test(fileName);
-    const isExample = fileName === '.env.example';
-
-    return isEnvFile && !isExample;
+    return FileRestorer.SENSITIVE_FILE_PATTERN.test(fileName) && fileName !== '.env.example';
   }
 
   /**
@@ -241,14 +239,13 @@ export class FileRestorer {
       }
 
       // Determine write options
-      const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
-
       // If file doesn't exist, use secure default permissions for sensitive files
       // NOTE: 'mode' option is only effective on POSIX systems (Linux/macOS)
       // On Windows, it is ignored by fs.writeFileSync
-      if (!currentStats && this.isSensitiveFile(fileName)) {
-        writeOptions.mode = 0o600;
-      }
+      const writeOptions: fs.WriteFileOptions =
+        !currentStats && this.isSensitiveFile(fileName)
+          ? { encoding: 'utf-8', mode: 0o600 }
+          : { encoding: 'utf-8' };
 
       // Write content to target file
       try {
