@@ -104,20 +104,48 @@ export async function runSync(options: {
           let valueToAdd = '';
 
           if (bulkDecision === 'all_copy') {
-               const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
-               const parsedLine = sourceFile?.parsedLines.find(p => p.key === key);
-               if (parsedLine) valueToAdd = parsedLine.value;
+               if (sourceOfTruth) {
+                   const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
+                   const parsedLine = sourceFile?.parsedLines.find(p => p.key === key);
+                   if (parsedLine) valueToAdd = parsedLine.value;
+               } else {
+                   // Union mode: find first file that has the key
+                   for (const file of report.files) {
+                       const parsedLine = file.parsedLines.find(p => p.key === key);
+                       if (parsedLine) {
+                           valueToAdd = parsedLine.value;
+                           break;
+                       }
+                   }
+               }
           } else if (bulkDecision === 'all_empty') {
                valueToAdd = '';
           } else {
-              const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
-              const sourceValue = sourceFile?.parsedLines.find(p => p.key === key)?.value || '';
+              // Interactive
+              let sourceValue = '';
+              let sourceDescription = '';
+
+              if (sourceOfTruth) {
+                  const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
+                  sourceValue = sourceFile?.parsedLines.find(p => p.key === key)?.value || '';
+                  sourceDescription = sourceOfTruth;
+              } else {
+                   // Union mode: find first file that has the key
+                   for (const file of report.files) {
+                       const parsedLine = file.parsedLines.find(p => p.key === key);
+                       if (parsedLine) {
+                           sourceValue = parsedLine.value;
+                           sourceDescription = file.fileName;
+                           break;
+                       }
+                   }
+              }
 
               const action = await select<string>(
                   `Add ${colors.green(key)} to ${fileName}?`,
                   [
                       { title: `Add empty (${key}=)`, value: 'empty' },
-                      sourceValue ? { title: `Copy from ${sourceOfTruth} (${key}=${sourceValue})`, value: 'copy' } : null,
+                      sourceValue ? { title: `Copy from ${sourceDescription} (${key}=${sourceValue})`, value: 'copy' } : null,
                       { title: 'Skip', value: 'skip' }
                   ].filter(Boolean) as any
               );
