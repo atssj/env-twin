@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import prompts from 'prompts';
-import pc from 'picocolors';
 import { createBackups } from '../utils/backup.js';
 import { EnvFileAnalysis, EnvAnalysisReport } from '../modules/sync-logic.js';
+import { confirm, select, colors } from '../utils/ui.js';
 
 // ============================================================================
 // MAIN SYNC FUNCTION
@@ -30,11 +29,11 @@ export async function runSync(options: {
   // Check if any files exist
   const existingFiles = report.files.filter(f => f.exists);
   if (existingFiles.length === 0) {
-    console.log(pc.yellow('No .env* files found in the current directory.'));
+    console.log(colors.yellow('No .env* files found in the current directory.'));
     return;
   }
 
-  console.log(pc.bold(`Found ${existingFiles.length} .env* file(s):`));
+  console.log(colors.bold(`Found ${existingFiles.length} .env* file(s):`));
   existingFiles.forEach(f => console.log(`  - ${f.fileName}`));
   console.log('');
 
@@ -42,44 +41,31 @@ export async function runSync(options: {
   let sourceOfTruth = report.sourceOfTruth;
 
   if (!sourceOfTruth) {
-    // If we have an existing source (e.g. .env.example) but it wasn't picked (shouldn't happen with current logic unless manually skipped),
-    // or if no clear source exists.
-
-    // If not in non-interactive mode, ask the user
     if (!options.yes) {
-       const response = await prompts({
-        type: 'select',
-        name: 'source',
-        message: 'Select the "Source of Truth" file (keys will be synced FROM this file):',
-        choices: [
+       sourceOfTruth = await select<string>(
+        'Select the "Source of Truth" file (keys will be synced FROM this file):',
+        [
             ...existingFiles.map(f => ({ title: f.fileName, value: f.fileName })),
             { title: 'None (Union of all keys)', value: '' }
         ]
-      });
-      sourceOfTruth = response.source;
+      );
     } else {
-        // Auto-mode without explicit source: fallback to union behavior?
-        // Or just fail safely. Let's fallback to Union behavior for backward compat in --yes mode
         sourceOfTruth = '';
     }
   }
 
   if (sourceOfTruth) {
-      console.log(pc.blue(`Source of Truth: ${pc.bold(sourceOfTruth)}`));
-
-      // Re-analyze with confirmed source of truth if it changed from initial guess
+      console.log(`${colors.blue('Source of Truth:')} ${colors.bold(sourceOfTruth)}`);
       if (sourceOfTruth !== report.sourceOfTruth) {
-          // We can just re-run analyze or manually re-calc. Re-running is safer/easier.
           Object.assign(report, analyzer.analyze({ sourceOfTruth }));
       }
   } else {
-      console.log(pc.blue(`Source of Truth: ${pc.bold('Union of all files')}`));
+      console.log(`${colors.blue('Source of Truth:')} ${colors.bold('Union of all files')}`);
   }
 
   console.log('');
 
   // 3. Interactive Resolution
-  // We collect all pending actions here
   interface PendingAction {
     file: string;
     key: string;
@@ -88,32 +74,28 @@ export async function runSync(options: {
   }
   const actions: PendingAction[] = [];
 
-  // 3a. Handle Missing Keys (Present in Source, Missing in Target)
+  // 3a. Handle Missing Keys
   const missingFiles = Object.keys(report.missingKeys);
 
   for (const fileName of missingFiles) {
       const missing = report.missingKeys[fileName];
       if (missing.length === 0) continue;
 
-      console.log(pc.bold(`${fileName} is missing ${missing.length} keys:`));
+      console.log(colors.bold(`${fileName} is missing ${missing.length} keys:`));
 
-      // Bulk Action Threshold
       let bulkDecision = 'ask';
       if (missing.length > 5 && !options.yes) {
-          const response = await prompts({
-              type: 'select',
-              name: 'decision',
-              message: `How do you want to handle ${missing.length} missing keys in ${fileName}?`,
-              choices: [
+          bulkDecision = await select<string>(
+              `How do you want to handle ${missing.length} missing keys in ${fileName}?`,
+              [
                   { title: 'Add all (empty values)', value: 'all_empty' },
                   { title: 'Add all (copy from source if possible)', value: 'all_copy' },
                   { title: 'Review one by one', value: 'ask' },
                   { title: 'Skip all', value: 'skip' }
               ]
-          });
-          bulkDecision = response.decision;
+          );
       } else if (options.yes) {
-          bulkDecision = 'all_empty'; // Default safe action in non-interactive mode
+          bulkDecision = 'all_empty';
       }
 
       if (bulkDecision === 'skip') continue;
@@ -122,105 +104,108 @@ export async function runSync(options: {
           let valueToAdd = '';
 
           if (bulkDecision === 'all_copy') {
-              // Try to find value in source of truth
                const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
                const parsedLine = sourceFile?.parsedLines.find(p => p.key === key);
                if (parsedLine) valueToAdd = parsedLine.value;
           } else if (bulkDecision === 'all_empty') {
-               valueToAdd = ''; // Explicitly empty
+               valueToAdd = '';
           } else {
-              // Interactive
               const sourceFile = report.files.find(f => f.fileName === sourceOfTruth);
               const sourceValue = sourceFile?.parsedLines.find(p => p.key === key)?.value || '';
 
-              const response = await prompts({
-                  type: 'select',
-                  name: 'action',
-                  message: `Add ${pc.green(key)} to ${fileName}?`,
-                  choices: [
+              const action = await select<string>(
+                  `Add ${colors.green(key)} to ${fileName}?`,
+                  [
                       { title: `Add empty (${key}=)`, value: 'empty' },
                       sourceValue ? { title: `Copy from ${sourceOfTruth} (${key}=${sourceValue})`, value: 'copy' } : null,
                       { title: 'Skip', value: 'skip' }
                   ].filter(Boolean) as any
-              });
+              );
 
-              if (response.action === 'skip') continue;
-              if (response.action === 'copy') valueToAdd = sourceValue;
+              if (action === 'skip') continue;
+              if (action === 'copy') valueToAdd = sourceValue;
           }
 
           actions.push({ file: fileName, key, action: 'add', value: valueToAdd });
       }
   }
 
-  // 3b. Handle Orphan Keys (Present in Target, Missing in Source)
-  // Only relevant if we have a specific Source of Truth (like .env.example) and we want to "promote" keys
-  if (sourceOfTruth) {
+  // 3b. Handle Orphan Keys & .env.example Creation
+  // Check if .env.example exists; if not, suggest creating it from All Keys
+  const exampleFile = report.files.find(f => f.fileName === '.env.example');
+
+  if (!exampleFile?.exists) {
+      // Logic: If .env.example is missing, we should offer to create it.
+      // We use 'report.allKeys' as the content source.
+      const allKeys = Array.from(report.allKeys).sort();
+      if (allKeys.length > 0) {
+          let shouldCreate = false;
+          if (options.yes) {
+              shouldCreate = true;
+          } else {
+              console.log(colors.yellow('No .env.example file found.'));
+              shouldCreate = await confirm('Do you want to create .env.example with all found keys?', true);
+          }
+
+          if (shouldCreate) {
+              // We add actions to create the file.
+              // Since the file doesn't exist, 'mergeContent' will treat original content as empty.
+              for (const key of allKeys) {
+                  actions.push({
+                      file: '.env.example',
+                      key,
+                      action: 'add',
+                      value: `input_${EnvFileAnalysis.sanitizeKey(key)}`
+                  });
+              }
+          }
+      }
+  }
+  // If it DOES exist, we handle orphans (promotion)
+  else if (sourceOfTruth) {
       const orphanFiles = Object.keys(report.orphanKeys);
       for (const fileName of orphanFiles) {
-          // We only care about orphans in "local" files being promoted to the "example" file
-          // If the source of truth IS the file, it has no orphans by definition.
-          // Typically we want to know: "I added API_KEY to .env, should I add it to .env.example?"
-
-          // Logic: If I am syncing FROM .env.example TO .env, I don't care about extra keys in .env usually.
-          // BUT, if I developed a feature and added a key to .env, I might want to back-port it to .env.example.
-
           const orphans = report.orphanKeys[fileName];
-          // We only prompt to add TO the source of truth
-          if (orphans.length > 0) {
-              // Check if we already handled this key (e.g. it was missing in another file, but we are adding it there?)
-              // No, this is about adding TO sourceOfTruth.
 
+          if (orphans.length > 0) {
               const potentialPromotions = orphans.filter(k => !report.allKeys.has(k) || !report.files.find(f => f.fileName === sourceOfTruth)?.keys.has(k));
 
               if (potentialPromotions.length > 0 && !options.yes) {
-                  // Prompt user
-                  console.log(pc.yellow(`Found ${potentialPromotions.length} keys in ${fileName} that are missing in ${sourceOfTruth}:`));
-                  // Simplified bulk ask
-                  const response = await prompts({
-                      type: 'confirm',
-                      name: 'promote',
-                      message: `Do you want to add these keys to ${sourceOfTruth}?`,
-                      initial: false
-                  });
+                  console.log(colors.yellow(`Found ${potentialPromotions.length} keys in ${fileName} that are missing in ${sourceOfTruth}:`));
 
-                  if (response.promote) {
+                  const shouldPromote = await confirm(`Do you want to add these keys to ${sourceOfTruth}?`, false);
+
+                  if (shouldPromote) {
                       for (const key of potentialPromotions) {
                           actions.push({
                               file: sourceOfTruth,
                               key,
                               action: 'add',
-                              value: `input_${EnvFileAnalysis.sanitizeKey(key)}` // Sanitize for example file
+                              value: `input_${EnvFileAnalysis.sanitizeKey(key)}`
                           });
                       }
                   }
               }
           }
       }
-  } else {
-      // Union Mode: If no single source of truth, "Missing" covered everything.
   }
 
   // 4. Execution
   if (actions.length === 0) {
-      console.log(pc.green('All files are in sync! No actions needed.'));
+      console.log(colors.green('All files are in sync! No actions needed.'));
       return;
   }
 
   console.log('');
-  console.log(pc.bold('Plan:'));
+  console.log(colors.bold('Plan:'));
   actions.forEach(a => {
-      console.log(`  ${pc.green('+')} ${a.file}: ${a.key}=${pc.dim(a.value)}`);
+      console.log(`  ${colors.green('+')} ${a.file}: ${a.key}=${colors.dim(a.value)}`);
   });
   console.log('');
 
   if (!options.yes) {
-      const confirm = await prompts({
-          type: 'confirm',
-          name: 'value',
-          message: 'Execute these changes?',
-          initial: true
-      });
-      if (!confirm.value) {
+      const shouldExecute = await confirm('Execute these changes?', true);
+      if (!shouldExecute) {
           console.log('Aborted.');
           return;
       }
@@ -231,7 +216,7 @@ export async function runSync(options: {
       const filesToBackup = Array.from(new Set(actions.map(a => path.join(cwd, a.file))));
       const backupTimestamp = createBackups(filesToBackup, cwd);
       if (backupTimestamp) {
-        console.log(pc.dim(`✓ Backup created (timestamp: ${backupTimestamp})`));
+        console.log(colors.dim(`✓ Backup created (timestamp: ${backupTimestamp})`));
       }
   }
 
@@ -254,14 +239,13 @@ export async function runSync(options: {
       try {
           fs.writeFileSync(tempPath, newContent, 'utf-8');
           fs.renameSync(tempPath, filePath);
-          console.log(pc.green(`✓ Updated ${fileName}`));
+          console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
-          console.error(pc.red(`Failed to update ${fileName}:`), err);
-          // Try to clean up temp
+          console.error(colors.red(`Failed to update ${fileName}:`), err);
           if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
       }
   }
 
   console.log('');
-  console.log(pc.green('Sync completed successfully!'));
+  console.log(colors.green('Sync completed successfully!'));
 }

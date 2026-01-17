@@ -22,6 +22,7 @@ interface CliOptions {
   force?: boolean;
   dryRun?: boolean;
   verbose?: boolean;
+  json?: boolean;
 }
 
 interface ParsedArgs {
@@ -43,7 +44,8 @@ type FlagKey =
   | 'CREATE_ROLLBACK'
   | 'FORCE'
   | 'DRY_RUN'
-  | 'VERBOSE';
+  | 'VERBOSE'
+  | 'JSON';
 
 const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   SOURCE: ['--source', '--src'],
@@ -60,6 +62,7 @@ const CLI_FLAGS: Record<FlagKey, readonly string[]> = {
   FORCE: ['--force', '-f'],
   DRY_RUN: ['--dry-run', '--simulate'],
   VERBOSE: ['--verbose', '-V'],
+  JSON: ['--json'],
 } as const;
 
 // ============================================================================
@@ -157,6 +160,10 @@ function parseArgs(): ParsedArgs {
         params.verbose = true;
         break;
 
+      case CLI_FLAGS.JSON.includes(arg):
+        params.json = true;
+        break;
+
       default:
         if (arg.startsWith('-')) {
           throw new Error(`Unknown option '${arg}'`);
@@ -225,19 +232,24 @@ Synchronize environment variable keys across all .env* files in the current dire
 
 Options:
   --no-backup           Skip creating a backup before syncing
+  --yes, -y             Skip confirmation prompts (auto-accept non-destructive actions)
+  --source, --src       Specify the "Source of Truth" file (keys synced FROM this file)
+  --json                Output analysis report in JSON format (AI friendly)
   --help, -h            Display this help message
 
 The sync command will:
   - Detect all .env* files (.env, .env.local, .env.development, .env.testing, .env.staging, .env.example)
-  - Collect all unique environment variable keys from all files
-  - Add missing keys to each file with empty values
+  - Analyze differences between files
+  - Interactively ask how to resolve missing keys (Add Empty, Copy Value, Skip)
   - Ensure .env.example contains all keys with placeholder values
   - Preserve existing values and file structure
   - Create a backup in .env-twin/ before modifying files
 
 Examples:
   env-twin sync
-  env-twin sync --no-backup
+  env-twin sync --source .env.example
+  env-twin sync --json
+  env-twin sync --yes
 `
   );
 }
@@ -415,7 +427,12 @@ try {
   if (command === 'sync') {
     // Import and run sync command
     const { runSync } = await import('./commands/sync.js');
-    runSync({ noBackup: options.noBackup });
+    await runSync({
+        noBackup: options.noBackup,
+        yes: options.yes,
+        json: options.json,
+        source: options.source
+    });
   } else if (command === 'restore') {
     // Import and run enhanced restore command
     const { runEnhancedRestore } = await import('./commands/restore.js');
