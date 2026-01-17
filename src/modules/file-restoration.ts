@@ -43,6 +43,11 @@ export type ProgressCallback = (progress: RestoreProgress) => void;
  */
 export class FileRestorer {
   private static readonly SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
+  private static readonly DEFAULT_WRITE_OPTIONS: fs.WriteFileOptions = { encoding: 'utf-8' };
+  private static readonly SECURE_WRITE_OPTIONS: fs.WriteFileOptions = {
+    encoding: 'utf-8',
+    mode: 0o600,
+  };
   private cwd: string;
   private backupDir: string;
   private rollbackManager: any; // Will be set after importing rollback manager
@@ -242,10 +247,10 @@ export class FileRestorer {
       // If file doesn't exist, use secure default permissions for sensitive files
       // NOTE: 'mode' option is only effective on POSIX systems (Linux/macOS)
       // On Windows, it is ignored by fs.writeFileSync
-      const writeOptions: fs.WriteFileOptions =
+      const writeOptions =
         !currentStats && this.isSensitiveFile(fileName)
-          ? { encoding: 'utf-8', mode: 0o600 }
-          : { encoding: 'utf-8' };
+          ? FileRestorer.SECURE_WRITE_OPTIONS
+          : FileRestorer.DEFAULT_WRITE_OPTIONS;
 
       // Write content to target file
       try {
