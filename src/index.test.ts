@@ -190,7 +190,7 @@ describe('env-twin enhanced restore command', () => {
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR3=value3\n');
 
     // Run sync to create backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Modify files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified_value\n');
@@ -212,8 +212,9 @@ describe('env-twin enhanced restore command', () => {
   test('should list available backups with enhanced information', () => {
     // Create files and backup
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, {
       cwd: testDir,
@@ -228,7 +229,7 @@ describe('env-twin enhanced restore command', () => {
   test('should handle invalid timestamp gracefully', () => {
     // Create a backup first
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Try to restore with invalid timestamp
     expect(() => {
@@ -241,8 +242,9 @@ describe('env-twin enhanced restore command', () => {
   test('should preserve file permissions when restoring', () => {
     // Create files with specific content
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=original_value\n');
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Modify file and change permissions (on Unix systems)
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified_value\n');
@@ -265,7 +267,7 @@ describe('env-twin enhanced restore command', () => {
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR2=value2\n');
     fs.writeFileSync(path.join(testDir, '.env.development'), 'VAR3=value3\n');
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Modify all files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified\n');
@@ -292,7 +294,8 @@ describe('env-twin enhanced restore command', () => {
   test('should handle corrupted backup files', () => {
     // Create files and backup
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Corrupt the backup file
     const backupDir = path.join(testDir, '.env-twin');
@@ -318,8 +321,9 @@ describe('env-twin enhanced restore command', () => {
   test('should create rollback snapshot when requested', () => {
     // Create files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Modify file
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified\n');
@@ -350,13 +354,36 @@ describe('env-twin enhanced restore edge cases', () => {
     }
   });
 
+  beforeEach(() => {
+    const envFiles = [
+      '.env',
+      '.env.local',
+      '.env.development',
+      '.env.testing',
+      '.env.staging',
+      '.env.example',
+    ];
+    envFiles.forEach(file => {
+      const filePath = path.join(testDir, file);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    });
+    // Clean up backup directory
+    const backupDir = path.join(testDir, '.env-twin');
+    if (fs.existsSync(backupDir)) {
+      fs.rmSync(backupDir, { recursive: true, force: true });
+    }
+  });
+
   test('should handle concurrent restore operations gracefully', () => {
     // This test simulates what would happen if multiple restore operations
     // were run simultaneously (in a real scenario)
 
     // Create files and backup
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // First restore should succeed
     const output1 = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --yes`, {
@@ -370,7 +397,7 @@ describe('env-twin enhanced restore edge cases', () => {
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR2=value2\n');
 
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Modify files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified\n');
@@ -435,7 +462,7 @@ describe('env-twin sync command', () => {
     fs.writeFileSync(path.join(testDir, '.env.development'), 'VAR1=dev_value\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify all files have all keys
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -461,7 +488,7 @@ describe('env-twin sync command', () => {
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR3=value3\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify original values are preserved
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -475,7 +502,7 @@ describe('env-twin sync command', () => {
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR1=value1\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify all variables still exist in .env
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -496,7 +523,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR3=value3\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify comments are preserved
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -513,7 +540,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR2=value2\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify .env.example was created with all keys
     const examplePath = path.join(testDir, '.env.example');
@@ -530,7 +557,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR1=value1\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify .env now has VAR1
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -543,7 +570,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR1=value1\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify VAR1 was added to .env
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -553,7 +580,7 @@ VAR2=value2
 
   test('should handle no .env files gracefully', () => {
     // Don't create any .env files
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, {
+    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, {
       cwd: testDir,
     }).toString();
     expect(output).toContain('No .env* files found');
@@ -565,7 +592,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR.3=value3\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify all keys are synced
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -580,7 +607,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR2=value2\n');
 
     // Run sync command
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Verify backup directory was created
     const backupDir = path.join(testDir, '.env-twin');
@@ -606,8 +633,8 @@ VAR2=value2
       fs.rmSync(backupDir, { recursive: true, force: true });
     }
 
-    // Run sync command with --no-backup flag
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --no-backup`, { cwd: testDir });
+    // Run sync command with --no-backup flag (implies no interactivity in this context if logic supports it, but add --yes to be safe)
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --no-backup --yes`, { cwd: testDir });
 
     // Verify backup directory was not created
     expect(fs.existsSync(backupDir)).toBe(false);
@@ -619,7 +646,7 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR3=value3\n');
 
     // Run sync command to create backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // Get the backup timestamp
     const backupDir = path.join(testDir, '.env-twin');
@@ -645,9 +672,10 @@ VAR2=value2
   test('should list available backups', () => {
     // Create test files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+    fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
 
     // Run sync command to create backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
 
     // List backups
     const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, {
@@ -660,12 +688,13 @@ VAR2=value2
   test('should clean old backups', () => {
     // Create test files
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=value1\n');
+    fs.writeFileSync(path.join(testDir, '.env.local'), '');
 
     // Create multiple backups by running sync multiple times
     // We'll create backups by modifying files and syncing
     for (let i = 0; i < 3; i++) {
       fs.writeFileSync(path.join(testDir, '.env'), `VAR1=value${i}\nVAR${i}=test\n`);
-      execSync(`bun ${path.join(__dirname, 'index.ts')} sync`, { cwd: testDir });
+      execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
     }
 
     // Verify backups exist
