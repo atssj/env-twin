@@ -174,6 +174,21 @@ export class FileRestorer {
   }
 
   /**
+   * Determine if a file should be treated as sensitive
+   *
+   * @param fileName The name of the file
+   * @returns True if the file is sensitive (e.g., .env), false otherwise
+   */
+  private isSensitiveFile(fileName: string): boolean {
+    // Check if it's an environment file (.env, .env.local, .env.production, etc.)
+    // But explicitly exclude .env.example which is usually safe
+    const isEnvFile = /^\.env(\.|$)/.test(fileName);
+    const isExample = fileName === '.env.example';
+
+    return isEnvFile && !isExample;
+  }
+
+  /**
    * Restore a single file from backup
    */
   private async restoreSingleFile(
@@ -229,8 +244,9 @@ export class FileRestorer {
       const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
 
       // If file doesn't exist, use secure default permissions for sensitive files
-      // .env files (except .env.example) are considered sensitive
-      if (!currentStats && fileName.startsWith('.env') && fileName !== '.env.example') {
+      // NOTE: 'mode' option is only effective on POSIX systems (Linux/macOS)
+      // On Windows, it is ignored by fs.writeFileSync
+      if (!currentStats && this.isSensitiveFile(fileName)) {
         writeOptions.mode = 0o600;
       }
 
