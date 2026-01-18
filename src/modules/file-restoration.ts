@@ -200,6 +200,18 @@ export class FileRestorer {
     options: { preservePermissions: boolean; preserveTimestamps: boolean }
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      // Validate filename to prevent path traversal
+      // We strictly enforce flat filenames (no path separators) for restoration
+      const validation = FileRestorer.validateFilePath(fileName);
+      if (!validation.isValid) {
+        return { success: false, error: validation.error };
+      }
+
+      // Explicitly reject . and .. which might pass generic validation
+      if (fileName === '.' || fileName === '..') {
+        return { success: false, error: 'Invalid filename: . and .. are not allowed' };
+      }
+
       const backupFilePath = path.join(this.backupDir, `${fileName}.${timestamp}`);
       const targetFilePath = path.join(this.cwd, fileName);
 

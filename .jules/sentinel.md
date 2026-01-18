@@ -14,3 +14,7 @@
 **Vulnerability:** Initial implementation of sensitive file detection compiled regex on every call and used inefficient object creation, potentially impacting performance during batch restorations.
 **Learning:** Static properties for regex patterns and optimized object literals improve performance and maintainability.
 **Prevention:** Moved regex to static class property and utilized static constants for write options to avoid redundant object allocation.
+## 2025-01-18 - Path Traversal Prevention in File Restoration
+**Vulnerability:** `FileRestorer.restoreFiles` allowed restoring files to paths outside the working directory if the backup metadata contained malicious filenames (e.g. `../file`).
+**Learning:** Relying on the filesystem to sanitize filenames (via `readdir`) is insufficient if the source of filenames (backup metadata) can be tampered with or comes from an untrusted source.
+**Prevention:** Added explicit validation in `restoreSingleFile` to reject filenames containing path separators (`/` or `\`) or traversal sequences (`..`).
