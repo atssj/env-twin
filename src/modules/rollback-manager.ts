@@ -58,6 +58,16 @@ export class RollbackManager {
   }
 
   /**
+   * Check if a file path is safe (contained within the current working directory)
+   * Prevents path traversal attacks
+   */
+  private isPathSafe(fileName: string): boolean {
+    const targetPath = path.resolve(this.cwd, fileName);
+    const relative = path.relative(this.cwd, targetPath);
+    return !relative.startsWith('..') && !path.isAbsolute(relative);
+  }
+
+  /**
    * Create a rollback snapshot of specified files
    */
   createSnapshot(files: string[], options: RollbackOptions = {}): Promise<RollbackSnapshot> {
@@ -94,6 +104,18 @@ export class RollbackManager {
         // Process each file
         const processFile = (fileName: string): Promise<RollbackFile> => {
           return new Promise(resolveFile => {
+            // Security check: Prevent path traversal
+            if (!this.isPathSafe(fileName)) {
+              // We return a "non-existent" file for unsafe paths to skip them safely
+              // In a real app we might want to log this violation
+              resolveFile({
+                fileName,
+                filePath: path.join(this.cwd, fileName),
+                exists: false
+              });
+              return;
+            }
+
             const filePath = path.join(this.cwd, fileName);
             const rollbackFile: RollbackFile = {
               fileName,
@@ -221,6 +243,11 @@ export class RollbackManager {
       // Process each file in the snapshot
       for (const fileInfo of metadata.files) {
         try {
+          // Security check: Prevent path traversal during restore
+          if (!this.isPathSafe(fileInfo.fileName)) {
+            continue;
+          }
+
           const filePath = path.join(this.cwd, fileInfo.fileName);
 
           if (fileInfo.exists && fileInfo.hasContent) {
