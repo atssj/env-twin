@@ -59,6 +59,23 @@ export class FileRestorer {
   }
 
   /**
+   * Check if a file path is safe (contained within the current working directory)
+   * Prevents path traversal attacks
+   */
+  private isPathSafe(fileName: string): boolean {
+    // Resolve the full path
+    const targetPath = path.resolve(this.cwd, fileName);
+
+    // Calculate relative path from CWD
+    const relative = path.relative(this.cwd, targetPath);
+
+    // Check if path is outside CWD:
+    // 1. Starts with '..' (parent directory)
+    // 2. Is absolute (can happen on Windows if on different drive)
+    return !relative.startsWith('..') && !path.isAbsolute(relative);
+  }
+
+  /**
    * Set progress callback for real-time updates
    */
   setProgressCallback(callback: ProgressCallback): void {
@@ -200,6 +217,11 @@ export class FileRestorer {
     options: { preservePermissions: boolean; preserveTimestamps: boolean }
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      // Security check: Prevent path traversal
+      if (!this.isPathSafe(fileName)) {
+        return { success: false, error: `Security Error: Invalid file path '${fileName}'. Path traversal detected.` };
+      }
+
       const backupFilePath = path.join(this.backupDir, `${fileName}.${timestamp}`);
       const targetFilePath = path.join(this.cwd, fileName);
 
@@ -295,6 +317,12 @@ export class FileRestorer {
     const warnings: string[] = [];
 
     for (const fileName of backup.files) {
+      // Security check
+      if (!this.isPathSafe(fileName)) {
+        errors.push(`Security Error: Invalid file path '${fileName}' in backup.`);
+        continue;
+      }
+
       const backupFilePath = path.join(this.backupDir, `${fileName}.${backup.timestamp}`);
 
       try {
