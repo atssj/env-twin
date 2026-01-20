@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createBackups } from '../utils/backup.js';
+import { writeAtomic } from '../utils/atomic-fs.js';
 
 // ============================================================================
 // TYPES
@@ -198,7 +199,18 @@ function mergeEnvFile(filePath: string, allKeys: Set<string>, isExample: boolean
 
 function writeEnvFile(filePath: string, content: string): boolean {
   try {
-    fs.writeFileSync(filePath, content, 'utf-8');
+    // Try to get existing mode to preserve it
+    let mode: number | undefined;
+    if (fs.existsSync(filePath)) {
+      try {
+        const stats = fs.statSync(filePath);
+        mode = stats.mode;
+      } catch (e) {
+        // Ignore error reading stats
+      }
+    }
+
+    writeAtomic(filePath, content, { mode });
     return true;
   } catch (error) {
     console.error(
