@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createBackups } from '../utils/backup.js';
+import { writeFileSyncAtomic } from '../utils/atomic-fs.js';
 import { EnvFileAnalysis, EnvAnalysisReport } from '../modules/sync-logic.js';
 import { confirm, select, colors } from '../utils/ui.js';
 
@@ -263,14 +264,11 @@ export async function runSync(options: {
       );
 
       // Atomic Write
-      const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
-          fs.renameSync(tempPath, filePath);
+          writeFileSyncAtomic(filePath, newContent, { encoding: 'utf-8' });
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
           console.error(colors.red(`Failed to update ${fileName}:`), err);
-          if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
       }
   }
 

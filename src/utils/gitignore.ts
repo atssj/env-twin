@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { writeFileSyncAtomic } from './atomic-fs.js';
 
 // ============================================================================
 // TYPES
@@ -54,7 +55,7 @@ function readGitignoreFile(cwd: string): string[] {
 function writeGitignoreFile(cwd: string, content: string): boolean {
   const gitignorePath = path.join(cwd, GITIGNORE_FILE);
   try {
-    fs.writeFileSync(gitignorePath, content, 'utf-8');
+    writeFileSyncAtomic(gitignorePath, content, { encoding: 'utf-8' });
     return true;
   } catch (error) {
     console.error(

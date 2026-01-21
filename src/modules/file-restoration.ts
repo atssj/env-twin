@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { BackupInfo } from '../utils/backup.js';
+import { writeFileSyncAtomic } from '../utils/atomic-fs.js';
 
 /**
  * File Restoration Module
@@ -290,7 +291,7 @@ export class FileRestorer {
       // Determine write options
       // If file doesn't exist, use secure default permissions for sensitive files
       // NOTE: 'mode' option is only effective on POSIX systems (Linux/macOS)
-      // On Windows, it is ignored by fs.writeFileSync
+      // On Windows, it is ignored by fs.writeFileSync (but handled by writeFileSyncAtomic)
       const writeOptions =
         !currentStats && this.isSensitiveFile(fileName)
           ? FileRestorer.SECURE_WRITE_OPTIONS
@@ -298,19 +299,14 @@ export class FileRestorer {
 
       // Write content to target file
       try {
-        fs.writeFileSync(targetFilePath, content, writeOptions);
+        // If preserving permissions and we have old stats, pass mode to atomic write
+        if (options.preservePermissions && currentStats) {
+            writeFileSyncAtomic(targetFilePath, content, { ...writeOptions, mode: currentStats.mode });
+        } else {
+            writeFileSyncAtomic(targetFilePath, content, writeOptions);
+        }
       } catch (error) {
         return { success: false, error: `Cannot write to target file: ${targetFilePath}` };
-      }
-
-      // Preserve permissions if requested and file existed before
-      if (options.preservePermissions && currentStats) {
-        try {
-          // Preserve file mode (permissions)
-          fs.chmodSync(targetFilePath, currentStats.mode);
-        } catch (error) {
-          // Continue anyway, just warning
-        }
       }
 
       // Preserve timestamps if requested
