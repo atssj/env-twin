@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { writeFileSyncAtomic } from '../utils/atomic-fs.js';
 
 /**
  * Rollback Management Module
@@ -167,7 +168,7 @@ export class RollbackManager {
                 if (!fs.existsSync(contentDir)) {
                   fs.mkdirSync(contentDir, { recursive: true, mode: 0o700 });
                 }
-                fs.writeFileSync(contentPath, file.content, { encoding: 'utf-8', mode: 0o600 });
+                writeFileSyncAtomic(contentPath, file.content, { encoding: 'utf-8', mode: 0o600 });
               }
             }
 
@@ -189,7 +190,7 @@ export class RollbackManager {
               options,
             };
 
-            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), {
+            writeFileSyncAtomic(metadataPath, JSON.stringify(metadata, null, 2), {
               encoding: 'utf-8',
               mode: 0o600,
             });
@@ -262,17 +263,11 @@ export class RollbackManager {
                 fs.mkdirSync(dir, { recursive: true });
               }
 
-              // Write file
-              fs.writeFileSync(filePath, content, 'utf-8');
-
-              // Restore permissions if available
-              if (fileInfo.permissions && process.platform !== 'win32') {
-                try {
-                  fs.chmodSync(filePath, fileInfo.permissions);
-                } catch (error) {
-                  // Continue without permissions
-                }
-              }
+              // Write file (Atomic with permissions if available)
+              writeFileSyncAtomic(filePath, content, {
+                encoding: 'utf-8',
+                mode: fileInfo.permissions
+              });
 
               rolledBackFiles.push(fileInfo.fileName);
             }
@@ -601,7 +596,7 @@ export class RollbackUtils {
    */
   static createTempRollbackFile(originalPath: string, content: string): string {
     const tempPath = `${originalPath}.rollback.${Date.now()}`;
-    fs.writeFileSync(tempPath, content, { encoding: 'utf-8', mode: 0o600 });
+    writeFileSyncAtomic(tempPath, content, { encoding: 'utf-8', mode: 0o600 });
     return tempPath;
   }
 
@@ -625,7 +620,7 @@ export class RollbackUtils {
       }
 
       // Write new content
-      fs.writeFileSync(originalPath, newContent, 'utf-8');
+      writeFileSyncAtomic(originalPath, newContent, { encoding: 'utf-8' });
 
       return { success: true, rollbackPath };
     } catch (error) {
@@ -640,7 +635,7 @@ export class RollbackUtils {
     try {
       if (rollbackPath && fs.existsSync(rollbackPath)) {
         const content = fs.readFileSync(rollbackPath, 'utf-8');
-        fs.writeFileSync(originalPath, content, 'utf-8');
+        writeFileSyncAtomic(originalPath, content, { encoding: 'utf-8' });
         fs.unlinkSync(rollbackPath);
         return true;
       }

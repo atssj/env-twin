@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { ensureBackupDirInGitignore } from './gitignore.js';
+import { writeFileSyncAtomic } from './atomic-fs.js';
 
 // ============================================================================
 // TYPES
@@ -79,7 +80,7 @@ export function createBackup(filePath: string, cwd: string): boolean {
     const backupPath = path.join(cwd, BACKUP_DIR, backupFileName);
 
     const content = fs.readFileSync(filePath, 'utf-8');
-    fs.writeFileSync(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
+    writeFileSyncAtomic(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
     return true;
   } catch (error) {
     console.error(
@@ -108,7 +109,7 @@ export function createBackups(filePaths: string[], cwd: string): string | null {
       const backupPath = path.join(cwd, BACKUP_DIR, backupFileName);
 
       const content = fs.readFileSync(filePath, 'utf-8');
-      fs.writeFileSync(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
+      writeFileSyncAtomic(backupPath, content, { encoding: 'utf-8', mode: 0o600 });
       successCount++;
     } catch (error) {
       console.error(
@@ -224,7 +225,7 @@ export function restoreBackup(
           }
         }
 
-        fs.writeFileSync(targetFilePath, content, 'utf-8');
+        writeFileSyncAtomic(targetFilePath, content, { encoding: 'utf-8' });
         restored.push(originalFileName);
       } catch (error) {
         failed.push(originalFileName);
