@@ -265,7 +265,7 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode: 0o600 });
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
