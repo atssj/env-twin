@@ -265,7 +265,25 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Determine file mode:
+          // 1. If file exists, preserve its mode
+          // 2. If it's a new sensitive file (.env* but not .env.example), use 0o600
+          // 3. Otherwise default permissions
+          let mode: number | undefined;
+
+          if (fs.existsSync(filePath)) {
+              const stats = fs.statSync(filePath);
+              mode = stats.mode;
+          } else if (/^\.env(\.|$)/.test(fileName) && fileName !== '.env.example') {
+              mode = 0o600;
+          }
+
+          const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
+          if (mode !== undefined && process.platform !== 'win32') {
+              writeOptions.mode = mode;
+          }
+
+          fs.writeFileSync(tempPath, newContent, writeOptions);
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
