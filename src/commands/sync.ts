@@ -262,10 +262,33 @@ export async function runSync(options: {
           (key) => fileActions.find(a => a.key === key)?.value || ''
       );
 
+      // Determine correct permissions
+      let fileMode: number | undefined;
+      try {
+        if (fs.existsSync(filePath)) {
+           fileMode = fs.statSync(filePath).mode;
+        }
+      } catch (e) {
+        // ignore error if file doesn't exist or stat fails
+      }
+
+      // If file is new and sensitive (starts with .env but not .env.example), use secure default (600)
+      if (!fileMode && /^\.env(\.|$)/.test(fileName) && fileName !== '.env.example') {
+         fileMode = 0o600;
+      }
+
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Write with mode if available (note: writeFileSync mode is modified by umask)
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode: fileMode });
+
+          // Explicitly set mode to ensure permissions are preserved exactly as intended
+          // (bypassing umask or inherited permissions issues)
+          if (fileMode !== undefined) {
+             fs.chmodSync(tempPath, fileMode);
+          }
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
