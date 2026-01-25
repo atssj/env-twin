@@ -262,10 +262,37 @@ export async function runSync(options: {
           (key) => fileActions.find(a => a.key === key)?.value || ''
       );
 
+      // Determine file permissions
+      let fileMode: number | undefined;
+      try {
+        if (fs.existsSync(filePath)) {
+          fileMode = fs.statSync(filePath).mode;
+        } else {
+          // If new file, check if it's sensitive
+          // Matches .env, .env.local, etc., but exclude .env.example
+          const SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
+          if (SENSITIVE_FILE_PATTERN.test(fileName) && fileName !== '.env.example') {
+            fileMode = 0o600; // Read/write for owner only
+          }
+        }
+      } catch (error) {
+        // Ignore errors, rely on defaults
+      }
+
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
           fs.writeFileSync(tempPath, newContent, 'utf-8');
+
+          // Apply permissions to temp file before rename
+          if (fileMode !== undefined) {
+            try {
+              fs.chmodSync(tempPath, fileMode);
+            } catch (chmodError) {
+              // Ignore chmod errors (e.g. on Windows)
+            }
+          }
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
