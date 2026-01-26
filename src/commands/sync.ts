@@ -265,7 +265,29 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Determine secure file permissions
+          let fileMode = 0o644; // Default
+          if (fs.existsSync(filePath)) {
+            try {
+              const stats = fs.statSync(filePath);
+              fileMode = stats.mode & 0o777;
+            } catch (e) {
+              // Ignore error, fallback to default
+            }
+          } else if (/^\.env(\.|$)/.test(fileName) && fileName !== '.env.example') {
+            // New sensitive file: default to 0600 (read/write only for owner)
+            fileMode = 0o600;
+          }
+
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode: fileMode });
+
+          // Explicitly set permissions to ensure they are preserved (ignoring umask)
+          try {
+            fs.chmodSync(tempPath, fileMode);
+          } catch (e) {
+            // Ignore chmod errors on Windows or if not owner
+          }
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
