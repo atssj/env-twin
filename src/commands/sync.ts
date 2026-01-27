@@ -262,12 +262,31 @@ export async function runSync(options: {
           (key) => fileActions.find(a => a.key === key)?.value || ''
       );
 
+      // Determine file mode (permissions)
+      let fileMode: number | undefined;
+      try {
+        if (fs.existsSync(filePath)) {
+          const stats = fs.statSync(filePath);
+          fileMode = stats.mode;
+        } else if (/^\.env(\.|$)/.test(fileName) && fileName !== '.env.example') {
+          // New sensitive file: default to 600
+          fileMode = 0o600;
+        }
+      } catch (e) {
+        // Ignore stat errors
+      }
+
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
-          fs.renameSync(tempPath, filePath);
-          console.log(colors.green(`✓ Updated ${fileName}`));
+        const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
+        if (fileMode !== undefined) {
+          writeOptions.mode = fileMode;
+        }
+
+        fs.writeFileSync(tempPath, newContent, writeOptions);
+        fs.renameSync(tempPath, filePath);
+        console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
           console.error(colors.red(`Failed to update ${fileName}:`), err);
           if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
