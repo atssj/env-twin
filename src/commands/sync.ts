@@ -265,7 +265,20 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Determine file permissions
+          let fileMode: number | undefined;
+          if (fs.existsSync(filePath)) {
+            const stats = fs.statSync(filePath);
+            fileMode = stats.mode;
+          } else {
+            // New file: if it's an .env file (and not .env.example), make it private (600)
+            // otherwise let default (usually 644/664) take over.
+            if (/^\.env(\.|$)/.test(fileName) && fileName !== '.env.example') {
+              fileMode = 0o600;
+            }
+          }
+
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode: fileMode });
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
