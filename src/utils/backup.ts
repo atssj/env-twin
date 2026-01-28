@@ -206,6 +206,8 @@ export function restoreBackup(
 
         // Security Check: Symlink Attack
         // Check if target exists and is a symlink before writing
+        let fileMode: number | undefined;
+
         try {
           const lstat = fs.lstatSync(targetFilePath);
           if (lstat.isSymbolicLink()) {
@@ -216,6 +218,9 @@ export function restoreBackup(
             console.error(`Security Warning: Skipping directory overwrite: ${originalFileName}`);
             failed.push(originalFileName);
             continue;
+          } else {
+            // Preserve existing file permissions
+            fileMode = lstat.mode;
           }
         } catch (error: any) {
           // Ignore ENOENT (file not found), handle other errors
@@ -224,7 +229,14 @@ export function restoreBackup(
           }
         }
 
-        fs.writeFileSync(targetFilePath, content, 'utf-8');
+        // For new files, enforce secure permissions for sensitive files
+        if (fileMode === undefined) {
+          if (/^\.env(\.|$)/.test(originalFileName) && originalFileName !== '.env.example') {
+            fileMode = 0o600;
+          }
+        }
+
+        fs.writeFileSync(targetFilePath, content, { encoding: 'utf-8', mode: fileMode });
         restored.push(originalFileName);
       } catch (error) {
         failed.push(originalFileName);
