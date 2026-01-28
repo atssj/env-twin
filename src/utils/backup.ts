@@ -193,8 +193,37 @@ export function restoreBackup(
       const backupFilePath = path.join(backupPath, file);
       const targetFilePath = path.join(cwd, originalFileName);
 
+      // Security Check: Path Traversal
+      const relative = path.relative(cwd, targetFilePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        console.error(`Security Warning: Skipping path traversal attempt: ${originalFileName}`);
+        failed.push(originalFileName);
+        continue;
+      }
+
       try {
         const content = fs.readFileSync(backupFilePath, 'utf-8');
+
+        // Security Check: Symlink Attack
+        // Check if target exists and is a symlink before writing
+        try {
+          const lstat = fs.lstatSync(targetFilePath);
+          if (lstat.isSymbolicLink()) {
+            // Remove symlink to prevent writing through it
+            fs.unlinkSync(targetFilePath);
+          } else if (lstat.isDirectory()) {
+            // Do not overwrite directory
+            console.error(`Security Warning: Skipping directory overwrite: ${originalFileName}`);
+            failed.push(originalFileName);
+            continue;
+          }
+        } catch (error: any) {
+          // Ignore ENOENT (file not found), handle other errors
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
+        }
+
         fs.writeFileSync(targetFilePath, content, 'utf-8');
         restored.push(originalFileName);
       } catch (error) {

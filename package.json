@@ -1,28 +1,36 @@
 {
   "name": "env-twin",
   "version": "1.0.3",
-  "description": "Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync by copying missing keys, highlighting differences, and keeping your project's environment setup consistent and up to date.",
+  "author": "S Saha",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atssj/env-twin.git"
+  },
   "main": "dist/index.js",
   "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "type": "module",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "@types/bun": "^1.3.3",
+    "@types/node": "^20.11.19",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
   "bin": {
     "env-twin": "./dist/index.js"
+  },
+  "bugs": {
+    "url": "https://github.com/atssj/env-twin/issues"
+  },
+  "description": "Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync by copying missing keys, highlighting differences, and keeping your project's environment setup consistent and up to date.",
+  "engines": {
+    "node": ">=16.0.0"
   },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
-  "scripts": {
-    "test": "bun test",
-    "build": "tsc",
-    "start": "bun dist/index.js",
-    "lint:format": "prettier --write .",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
-  },
+  "homepage": "https://github.com/atssj/env-twin#readme",
   "keywords": [
     "env",
     "dotenv",
@@ -32,24 +40,16 @@
     "template",
     "configuration"
   ],
-  "author": "S Saha",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/atssj/env-twin.git"
+  "scripts": {
+    "test": "bun test",
+    "build": "tsc",
+    "start": "bun dist/index.js",
+    "lint:format": "prettier --write .",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
-  "bugs": {
-    "url": "https://github.com/atssj/env-twin/issues"
-  },
-  "homepage": "https://github.com/atssj/env-twin#readme",
-  "devDependencies": {
-    "@changesets/cli": "^2.29.4",
-    "@types/bun": "^1.3.3",
-    "@types/node": "^20.11.19",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  }
+  "type": "module",
+  "types": "dist/index.d.ts"
 }

@@ -59,6 +59,23 @@ export class FileRestorer {
   }
 
   /**
+   * Check if a file path is safe (contained within the current working directory)
+   * Prevents path traversal attacks
+   */
+  private isPathSafe(fileName: string): boolean {
+    // Resolve the full path
+    const targetPath = path.resolve(this.cwd, fileName);
+
+    // Calculate relative path from CWD
+    const relative = path.relative(this.cwd, targetPath);
+
+    // Check if path is outside CWD:
+    // 1. Starts with '..' (parent directory)
+    // 2. Is absolute (can happen on Windows if on different drive)
+    return !relative.startsWith('..') && !path.isAbsolute(relative);
+  }
+
+  /**
    * Set progress callback for real-time updates
    */
   setProgressCallback(callback: ProgressCallback): void {
@@ -247,11 +264,33 @@ export class FileRestorer {
 
       // Get current file stats if it exists (for rollback)
       let currentStats: fs.Stats | null = null;
-      if (fs.existsSync(targetFilePath)) {
-        try {
+      try {
+        // Security: Check for symlinks to prevent arbitrary file overwrite
+        const lstat = fs.lstatSync(targetFilePath);
+        if (lstat.isSymbolicLink()) {
+          // If it's a symlink, we must remove it before writing to ensure we don't
+          // overwrite the file it points to (which could be outside CWD).
+          try {
+            fs.unlinkSync(targetFilePath);
+          } catch (unlinkError) {
+            return {
+              success: false,
+              error: `Security: Failed to remove existing symlink '${fileName}': ${unlinkError instanceof Error ? unlinkError.message : String(unlinkError)}`,
+            };
+          }
+          // currentStats remains null as we treated it as a new file creation
+        } else {
+          // Regular file (or directory, though we checked that earlier implicitly via write?)
+          // actually we haven't checked if it's a directory.
+          if (lstat.isDirectory()) {
+             return { success: false, error: `Target '${fileName}' is a directory, cannot overwrite with file.` };
+          }
           currentStats = fs.statSync(targetFilePath);
-        } catch (error) {
-          // Continue anyway, just warning
+        }
+      } catch (error: any) {
+        // If file doesn't exist, that's fine. Other errors are problems.
+        if (error.code !== 'ENOENT') {
+          return { success: false, error: `Cannot access target path: ${error.message}` };
         }
       }
 
@@ -307,6 +346,12 @@ export class FileRestorer {
     const warnings: string[] = [];
 
     for (const fileName of backup.files) {
+      // Security check
+      if (!this.isPathSafe(fileName)) {
+        errors.push(`Security Error: Invalid file path '${fileName}' in backup.`);
+        continue;
+      }
+
       const backupFilePath = path.join(this.backupDir, `${fileName}.${backup.timestamp}`);
 
       try {
