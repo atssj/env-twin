@@ -265,7 +265,37 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Check for existing permissions or determine secure default
+          let fileMode = 0o666;
+          let fileExists = false;
+
+          try {
+              const stats = fs.statSync(filePath);
+              fileMode = stats.mode;
+              fileExists = true;
+          } catch (e) {
+              // File does not exist, use secure default for sensitive files
+              // Sensitive = .env* but NOT .env.example
+              const isSensitive = /^\.env(\.|$)/.test(fileName) && fileName !== '.env.example';
+              if (isSensitive) {
+                  fileMode = 0o600;
+              }
+          }
+
+          // Write to temp file
+          // Note: writeFileSync mode option is masked by umask, so we use chmod to guarantee exact permissions
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode: fileMode });
+
+          // Apply permissions explicitly to preserve original mode or enforce security
+          try {
+              fs.chmodSync(tempPath, fileMode);
+          } catch (chmodErr) {
+              // Ignore chmod errors on Windows
+              if (process.platform !== 'win32') {
+                  console.warn(colors.yellow(`Warning: Failed to set permissions for ${fileName}`));
+              }
+          }
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
