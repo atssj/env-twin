@@ -171,7 +171,9 @@ function parseArgs(): ParsedArgs {
           if (!params.timestamp) {
             params.timestamp = arg;
           } else {
-            throw new Error(`Unexpected argument '${arg}'. Only one timestamp argument is allowed for 'restore'.`);
+            throw new Error(
+              `Unexpected argument '${arg}'. Only one timestamp argument is allowed for 'restore'.`
+            );
           }
         } else {
           const cmdName = command || 'default';
@@ -428,10 +430,10 @@ try {
     // Import and run sync command
     const { runSync } = await import('./commands/sync.js');
     await runSync({
-        noBackup: options.noBackup,
-        yes: options.yes,
-        json: options.json,
-        source: options.source
+      noBackup: options.noBackup,
+      yes: options.yes,
+      json: options.json,
+      source: options.source,
     });
   } else if (command === 'restore') {
     // Import and run enhanced restore command
