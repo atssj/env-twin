@@ -7,3 +7,8 @@
 **Vulnerability:** Arbitrary File Overwrite via Symbolic Links (CWE-59) in `FileRestorer` and `restoreBackup`.
 **Learning:** Checking `fs.existsSync` follows symlinks, so it returns true for a symlink pointing to an existing file. Writing to this path overwrites the target file (e.g., `/etc/passwd`) instead of replacing the symlink.
 **Prevention:** Use `fs.lstatSync` to check if the target is a symbolic link. If so, unlink it (`fs.unlinkSync`) before writing the restored file to ensure the operation only affects the intended path.
+
+## 2026-02-01 - Permission Reset on Atomic Writes
+**Vulnerability:** Insecure File Permissions (CWE-276) during Atomic Write.
+**Learning:** The "Atomic Write" pattern (`write temp` + `rename`) replaces the original file with a new one created with default umask permissions (often 0644). This unintentionally makes sensitive files (previously 0600) readable by others.
+**Prevention:** Always `stat` the target file (if it exists) to capture its `mode` before creating the temporary file. Pass this `mode` to `fs.writeFileSync`. For new sensitive files, explicitly enforce restricted permissions (0600).
