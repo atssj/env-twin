@@ -57,10 +57,7 @@ export function confirm(message: string, initial: boolean = true): Promise<boole
  * A simple implementation that lists options and asks user to type the number.
  * Implementing a full arrow-key menu without deps is complex; this is a robust fallback.
  */
-export function select<T>(
-  message: string,
-  choices: Choice[]
-): Promise<T> {
+export function select<T>(message: string, choices: Choice[]): Promise<T> {
   return new Promise(resolve => {
     const rl = readline.createInterface({
       input: process.stdin,

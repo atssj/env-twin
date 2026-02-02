@@ -189,36 +189,36 @@ export class EnvFileAnalysis {
       // If the source file was specified but doesn't exist (e.g., user error or deleted), we can't fully analyze discrepancies against it.
       // However, if it DOES exist, we proceed.
       if (sourceFile) {
-         const sourceKeys = sourceFile.keys;
-
-         files.forEach(target => {
-             if (target.fileName === sourceOfTruthName) return;
-
-             // Missing: In Source but not in Target
-             const missing = Array.from(sourceKeys).filter(k => !target.keys.has(k));
-             if (missing.length > 0) {
-                 missingKeys[target.fileName] = missing;
-             }
-
-             // Orphan: In Target but not in Source
-             const orphans = Array.from(target.keys).filter(k => !sourceKeys.has(k));
-             if (orphans.length > 0) {
-                 orphanKeys[target.fileName] = orphans;
-             }
-         });
-      }
-    } else {
-        // No Source of Truth mode (Peer-to-Peer logic simulation or just raw report)
-        // If we want to simulate the "Old Behavior" (Union), every key not in a file is "missing".
-        // But for this "Action Oriented" approach, we just report what we found.
-        // We can treat 'allKeys' as the virtual source of truth for "missing" calculation if we want a "Union" report.
+        const sourceKeys = sourceFile.keys;
 
         files.forEach(target => {
-            const missing = Array.from(allKeys).filter(k => !target.keys.has(k));
-            if (missing.length > 0) {
-                missingKeys[target.fileName] = missing;
-            }
+          if (target.fileName === sourceOfTruthName) return;
+
+          // Missing: In Source but not in Target
+          const missing = Array.from(sourceKeys).filter(k => !target.keys.has(k));
+          if (missing.length > 0) {
+            missingKeys[target.fileName] = missing;
+          }
+
+          // Orphan: In Target but not in Source
+          const orphans = Array.from(target.keys).filter(k => !sourceKeys.has(k));
+          if (orphans.length > 0) {
+            orphanKeys[target.fileName] = orphans;
+          }
         });
+      }
+    } else {
+      // No Source of Truth mode (Peer-to-Peer logic simulation or just raw report)
+      // If we want to simulate the "Old Behavior" (Union), every key not in a file is "missing".
+      // But for this "Action Oriented" approach, we just report what we found.
+      // We can treat 'allKeys' as the virtual source of truth for "missing" calculation if we want a "Union" report.
+
+      files.forEach(target => {
+        const missing = Array.from(allKeys).filter(k => !target.keys.has(k));
+        if (missing.length > 0) {
+          missingKeys[target.fileName] = missing;
+        }
+      });
     }
 
     return {
@@ -226,7 +226,7 @@ export class EnvFileAnalysis {
       files,
       missingKeys,
       orphanKeys,
-      allKeys
+      allKeys,
     };
   }
 
@@ -248,8 +248,8 @@ export class EnvFileAnalysis {
     }
 
     keysToAdd.forEach(key => {
-        const value = valueProvider(key);
-        newLines.push(`${key}=${value}`);
+      const value = valueProvider(key);
+      newLines.push(`${key}=${value}`);
     });
 
     return newLines.join('\n');
