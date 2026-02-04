@@ -4,6 +4,8 @@ import { createBackups } from '../utils/backup.js';
 import { EnvFileAnalysis, EnvAnalysisReport } from '../modules/sync-logic.js';
 import { confirm, select, colors } from '../utils/ui.js';
 
+const SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
+
 // ============================================================================
 // MAIN SYNC FUNCTION
 // ============================================================================
@@ -265,7 +267,29 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Security: Preserve file permissions or use restricted permissions for sensitive files
+          let mode = 0o666; // Default fallback (masked by umask)
+          let modeSet = false;
+
+          // 1. Try to get existing file permissions
+          if (fs.existsSync(filePath)) {
+              try {
+                  const stats = fs.statSync(filePath);
+                  mode = stats.mode;
+                  modeSet = true;
+              } catch (e) {
+                  // Ignore error reading stats
+              }
+          }
+
+          // 2. If new file, check if it's sensitive
+          if (!modeSet && SENSITIVE_FILE_PATTERN.test(fileName) && fileName !== '.env.example') {
+              mode = 0o600; // Restricted permissions for sensitive files
+          }
+
+          // 3. Write temp file with correct mode (only works on POSIX)
+          fs.writeFileSync(tempPath, newContent, { encoding: 'utf-8', mode });
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
