@@ -83,8 +83,21 @@ function groupActionsByFile(actions: PendingAction[]): Map<string, PendingAction
   return grouped;
 }
 
+const SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
+
 function readMode(filePath: string): number | undefined {
-  if (!fs.existsSync(filePath)) return undefined;
+  const fileName = path.basename(filePath);
+
+  // Security: For new sensitive files (excluding .env.example), enforce 0o600 permissions
+  if (!fs.existsSync(filePath)) {
+    const isSensitive = SENSITIVE_FILE_PATTERN.test(fileName) && fileName !== '.env.example';
+    if (isSensitive) {
+      return 0o600;
+    }
+    return undefined;
+  }
+
+  // For existing files, preserve their current permissions
   try {
     return fs.statSync(filePath).mode;
   } catch {
