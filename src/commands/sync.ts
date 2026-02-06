@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { createBackups } from '../utils/backup.js';
+
+const SENSITIVE_FILE_PATTERN = /^\.env(\.|$)/;
 import { EnvFileAnalysis, EnvAnalysisReport } from '../modules/sync-logic.js';
 import { confirm, select, colors } from '../utils/ui.js';
 
@@ -265,7 +267,35 @@ export async function runSync(options: {
       // Atomic Write
       const tempPath = `${filePath}.tmp`;
       try {
-          fs.writeFileSync(tempPath, newContent, 'utf-8');
+          // Security: Preserve existing file permissions or enforce 600 for new sensitive files
+          let fileMode: number | undefined;
+
+          if (fs.existsSync(filePath)) {
+              const stats = fs.statSync(filePath);
+              fileMode = stats.mode;
+          } else {
+              const isSensitive = SENSITIVE_FILE_PATTERN.test(fileName) && fileName !== '.env.example';
+              if (isSensitive) {
+                  fileMode = 0o600;
+              }
+          }
+
+          const writeOptions: fs.WriteFileOptions = { encoding: 'utf-8' };
+          if (fileMode !== undefined) {
+              writeOptions.mode = fileMode;
+          }
+
+          fs.writeFileSync(tempPath, newContent, writeOptions);
+
+          // Double-check permissions (important for atomic rename)
+          if (fileMode !== undefined) {
+              try {
+                  fs.chmodSync(tempPath, fileMode);
+              } catch (e) {
+                  // Ignore chmod errors (e.g. Windows)
+              }
+          }
+
           fs.renameSync(tempPath, filePath);
           console.log(colors.green(`✓ Updated ${fileName}`));
       } catch (err) {
