@@ -14,3 +14,20 @@
 **Vulnerability:** Initial implementation of sensitive file detection compiled regex on every call and used inefficient object creation, potentially impacting performance during batch restorations.
 **Learning:** Static properties for regex patterns and optimized object literals improve performance and maintainability.
 **Prevention:** Moved regex to static class property and utilized static constants for write options to avoid redundant object allocation.
+## 2024-05-23 - Symlink Attack Prevention in File Restoration
+**Vulnerability:** Restore operation followed symlinks in the target directory, allowing an attacker to overwrite arbitrary files by creating a symlink in the working directory pointing to a sensitive file (e.g. /etc/passwd).
+**Learning:** Always use `lstat` instead of `stat` when inspecting files that might be replaced, and explicitly check for/remove symlinks before writing to a path.
+**Prevention:** Added `lstat` check in `restoreSingleFile` to detect symlinks and `unlink` them before writing restored content.
+## 2025-01-18 - Path Traversal Prevention in File Restoration
+**Vulnerability:** `FileRestorer.restoreFiles` allowed restoring files to paths outside the working directory if the backup metadata contained malicious filenames (e.g. `../file`).
+**Learning:** Relying on the filesystem to sanitize filenames (via `readdir`) is insufficient if the source of filenames (backup metadata) can be tampered with or comes from an untrusted source.
+**Prevention:** Added explicit validation in `restoreSingleFile` to reject filenames containing path separators (`/` or `\`) or traversal sequences (`..`).
+## 2025-02-14 - Path Traversal Prevention in File Operations
+**Vulnerability:** Path Traversal (CWE-22) in `FileRestorer` and `RollbackManager`.
+**Learning:** Accepting filenames from backup metadata or user input without validation allows writing/reading files outside the working directory using `../` sequences.
+**Prevention:** Implement strict path validation using `path.resolve` and `path.relative` to ensure all file operations are contained within the intended root directory.
+
+## 2026-01-20 - Symlink Attack in File Restoration
+**Vulnerability:** Arbitrary File Overwrite via Symbolic Links (CWE-59) in `FileRestorer` and `restoreBackup`.
+**Learning:** Checking `fs.existsSync` follows symlinks, so it returns true for a symlink pointing to an existing file. Writing to this path overwrites the target file (e.g., `/etc/passwd`) instead of replacing the symlink.
+**Prevention:** Use `fs.lstatSync` to check if the target is a symbolic link. If so, unlink it (`fs.unlinkSync`) before writing the restored file to ensure the operation only affects the intended path.
