@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createBackups } from '../utils/backup.js';
+import { writeAtomic } from '../utils/atomic-fs.js';
 import { EnvFileAnalysis, EnvAnalysisReport } from '../modules/sync-logic.js';
 import { confirm, select, colors } from '../utils/ui.js';
 import { writeAtomic } from '../utils/atomic-fs.js';
@@ -380,6 +381,27 @@ export async function runSync(options: {
   // Check if .env.example exists; if not, suggest creating it from All Keys
   const exampleFile = report.files.find(f => f.fileName === '.env.example');
 
+function writeEnvFile(filePath: string, content: string): boolean {
+  try {
+    // Try to get existing mode to preserve it
+    let mode: number | undefined;
+    if (fs.existsSync(filePath)) {
+      try {
+        const stats = fs.statSync(filePath);
+        mode = stats.mode;
+      } catch (e) {
+        // Ignore error reading stats
+      }
+    }
+
+    writeAtomic(filePath, content, { mode });
+    return true;
+  } catch (error) {
+    console.error(
+      `Error: Failed to write ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return false;
+  }
   if (!exampleFile?.exists) {
       // Logic: If .env.example is missing, we should offer to create it.
       // We use 'report.allKeys' as the content source.
