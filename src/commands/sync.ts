@@ -183,6 +183,7 @@ function writeEnvFile(filePath: string, content: string): boolean {
       `Error: Failed to write ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`
     );
     return false;
+  }
   if (!exampleFile?.exists) {
       // Logic: If .env.example is missing, we should offer to create it.
       // We use 'report.allKeys' as the content source.
