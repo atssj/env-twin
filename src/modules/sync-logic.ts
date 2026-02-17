@@ -39,6 +39,9 @@ export interface SyncOptions {
 // PARSING LOGIC
 // ============================================================================
 
+/** Prefix for exported environment variables in bash syntax */
+const EXPORT_PREFIX = 'export ';
+
 export function parseEnvLine(line: string): ParsedEnvLine {
   const trimmed = line.trim();
   const isComment = trimmed.startsWith('#');
@@ -69,8 +72,8 @@ export function parseEnvLine(line: string): ParsedEnvLine {
   const value = line.substring(eqIndex + 1);
 
   // Handle 'export' prefix (bash syntax: export KEY=value)
-  if (key.startsWith('export ')) {
-    key = key.substring(7).trim();
+  if (key.startsWith(EXPORT_PREFIX)) {
+    key = key.substring(EXPORT_PREFIX.length).trim();
   }
 
   return {

@@ -18,7 +18,7 @@ export async function runSync(options: SyncCommandOptions = {}): Promise<void> {
 
   if (options.json) {
     // Convert Sets to Arrays for JSON serialization
-    const replacer = (_key: string, value: unknown) => {
+    const replacer = (_: string, value: unknown) => {
       if (value instanceof Set) {
         return Array.from(value);
       }

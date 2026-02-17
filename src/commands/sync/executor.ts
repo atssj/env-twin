@@ -52,7 +52,8 @@ export async function executeSyncActions(params: ExecuteParams): Promise<void> {
     );
 
     // Ensure file ends with newline (POSIX standard)
-    if (!newContent.endsWith('\n')) {
+    // Only add newline if there's actual content (avoid creating empty files with just a newline)
+    if (newContent.length > 0 && !newContent.endsWith('\n')) {
       newContent += '\n';
     }
 
