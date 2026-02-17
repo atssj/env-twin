@@ -24,6 +24,35 @@ describe('sync-logic', () => {
       const result = parseEnvLine(line);
       expect(result.isEmpty).toBe(true);
     });
+
+    it('handles export prefix', () => {
+      const line = 'export KEY=value';
+      const result = parseEnvLine(line);
+      expect(result.key).toBe('KEY');
+      expect(result.value).toBe('value');
+      expect(result.isComment).toBe(false);
+    });
+
+    it('handles export with multiple spaces', () => {
+      const line = 'export   KEY=value';
+      const result = parseEnvLine(line);
+      expect(result.key).toBe('KEY');
+      expect(result.value).toBe('value');
+    });
+
+    it('handles keys with spaces around equals', () => {
+      const line = 'SPACED_KEY = value with spaces';
+      const result = parseEnvLine(line);
+      expect(result.key).toBe('SPACED_KEY');
+      expect(result.value).toBe(' value with spaces');
+    });
+
+    it('handles empty key (line starting with =)', () => {
+      const line = '=NO_KEY';
+      const result = parseEnvLine(line);
+      expect(result.key).toBe('');
+      expect(result.value).toBe('NO_KEY');
+    });
   });
 
   describe('EnvFileAnalysis', () => {

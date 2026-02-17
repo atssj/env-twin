@@ -65,8 +65,13 @@ export function parseEnvLine(line: string): ParsedEnvLine {
     };
   }
 
-  const key = line.substring(0, eqIndex).trim();
+  let key = line.substring(0, eqIndex).trim();
   const value = line.substring(eqIndex + 1);
+
+  // Handle 'export' prefix (bash syntax: export KEY=value)
+  if (key.startsWith('export ')) {
+    key = key.substring(7).trim();
+  }
 
   return {
     key,

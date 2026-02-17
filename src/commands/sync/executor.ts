@@ -45,11 +45,16 @@ export async function executeSyncActions(params: ExecuteParams): Promise<void> {
     const entries = Array.from(new Map(fileActions.map(a => [a.key, a.value])));
     const keysToAdd = entries.map(([key]) => key);
     const values = new Map(entries);
-    const newContent = EnvFileAnalysis.mergeContent(
+    let newContent = EnvFileAnalysis.mergeContent(
       originalFile?.content || '',
       keysToAdd,
       key => values.get(key) || ''
     );
+
+    // Ensure file ends with newline (POSIX standard)
+    if (!newContent.endsWith('\n')) {
+      newContent += '\n';
+    }
 
     try {
       writeAtomic(filePath, newContent, { mode: readMode(filePath) });
