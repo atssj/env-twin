@@ -111,7 +111,7 @@ export class RollbackManager {
               resolveFile({
                 fileName,
                 filePath: path.join(this.cwd, fileName),
-                exists: false
+                exists: false,
               });
               return;
             }

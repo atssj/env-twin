@@ -65,11 +65,11 @@ describe('Atomic File System Utils', () => {
     });
 
     it('should clean up temp file on error', () => {
-        const filePath = path.join(TEST_DIR, 'nonexistent/test.txt');
+      const filePath = path.join(TEST_DIR, 'nonexistent/test.txt');
 
-        expect(() => {
-            writeAtomic(filePath, 'content');
-        }).toThrow();
+      expect(() => {
+        writeAtomic(filePath, 'content');
+      }).toThrow();
     });
   });
 });

@@ -36,7 +36,7 @@ export function writeAtomic(
     } catch (renameError: any) {
       if (process.platform === 'win32' && renameError.code === 'EPERM') {
         if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+          fs.unlinkSync(filePath);
         }
         try {
           fs.renameSync(tempPath, filePath);

@@ -35,7 +35,7 @@ describe('FileRestorer Security', () => {
     const backupInfo = {
       timestamp,
       files: [maliciousFile],
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     await restorer.restoreFiles(backupInfo);

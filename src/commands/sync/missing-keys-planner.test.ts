@@ -64,10 +64,9 @@ describe('missing-keys-planner', () => {
   it('copies values when bulk mode is all_copy', async () => {
     const keys = ['A', 'B', 'C', 'D', 'E', 'F'];
     const sourceValues = Object.fromEntries(keys.map(key => [key, `value_${key}`]));
-    const report = buildReport(
-      [buildFile('.env.example', sourceValues), buildFile('.env', {})],
-      { '.env': keys }
-    );
+    const report = buildReport([buildFile('.env.example', sourceValues), buildFile('.env', {})], {
+      '.env': keys,
+    });
 
     const actions = await planMissingKeyActions({
       report,

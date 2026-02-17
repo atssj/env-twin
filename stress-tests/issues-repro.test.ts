@@ -43,7 +43,7 @@ describe('Issue Reproduction Tests', () => {
 
       // Issue: keys are empty objects {} instead of arrays
       const envFile = json.files.find((f: any) => f.fileName === '.env');
-      
+
       // This will fail until Issue 1 is fixed
       expect(envFile.keys).toBeInstanceOf(Array);
       expect(envFile.keys).toContain('KEY1');
@@ -62,15 +62,15 @@ describe('Issue Reproduction Tests', () => {
       execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir });
 
       const envContent = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
-      
+
       // The file should either:
       // 1. Have the key parsed as "SPACED_KEY" (without trailing space)
       // 2. Not add a duplicate "SPACED_KEY=" line
-      
+
       // Issue: Currently adds SPACED_KEY= as a new line
       const lines = envContent.split('\n');
       const spacedKeyLines = lines.filter(l => l.startsWith('SPACED_KEY'));
-      
+
       // Should only have one SPACED_KEY line
       expect(spacedKeyLines.length).toBe(1);
     });
@@ -84,7 +84,7 @@ describe('Issue Reproduction Tests', () => {
       execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir });
 
       const localContent = fs.readFileSync(path.join(testDir, '.env.local'), 'utf-8');
-      
+
       // Issue: Currently adds "export EXPORTED=" instead of "EXPORTED="
       // The key should be "EXPORTED", not "export EXPORTED"
       expect(localContent).toContain('EXPORTED=');
@@ -103,7 +103,7 @@ describe('Issue Reproduction Tests', () => {
       // Check that empty keys don't cause issues
       const envFile = json.files.find((f: any) => f.fileName === '.env');
       const hasEmptyKey = envFile.parsedLines.some((l: any) => l.key === '');
-      
+
       // Should either skip these lines or handle them gracefully
       // Currently creates an entry with empty key
       expect(hasEmptyKey).toBe(true); // Documenting current behavior
@@ -116,11 +116,11 @@ describe('Issue Reproduction Tests', () => {
       fs.writeFileSync(path.join(testDir, '.env.local'), 'KEY2=value2\nKEY3=value3\n');
 
       const output = execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir, encoding: 'utf-8' });
-      
+
       // Issue: Output shows ".env is missing 2 keys:" but doesn't list them
       // Should show: ".env is missing 2 keys: KEY2, KEY3"
       expect(output).toMatch(/missing \d+ keys?:/);
-      
+
       // Ideally should list the actual keys (this will fail until fixed)
       // expect(output).toContain('KEY2');
       // expect(output).toContain('KEY3');
@@ -152,7 +152,7 @@ describe('Issue Reproduction Tests', () => {
       execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir });
 
       const localContent = fs.readFileSync(path.join(testDir, '.env.local'), 'utf-8');
-      
+
       // The value should be preserved with all equals signs
       // Currently adds KEY_WITH_EQUALS= (empty) which might be wrong
       // depending on intended behavior
@@ -166,7 +166,7 @@ describe('Issue Reproduction Tests', () => {
       execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir });
 
       const localContent = fs.readFileSync(path.join(testDir, '.env.local'), 'utf-8');
-      
+
       // Should add NO_VALUE= (empty value is valid)
       expect(localContent).toContain('NO_VALUE=');
     });
@@ -178,7 +178,7 @@ describe('Issue Reproduction Tests', () => {
       fs.writeFileSync(path.join(testDir, '.env.local'), 'LOCAL=value\n');
 
       const result = execSync(`bun ${CLI_PATH} sync --yes`, { cwd: testDir, encoding: 'utf-8' });
-      
+
       // Should complete without errors
       expect(result).toContain('Sync completed');
     });

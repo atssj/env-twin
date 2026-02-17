@@ -284,7 +284,10 @@ export class FileRestorer {
           // Regular file (or directory, though we checked that earlier implicitly via write?)
           // actually we haven't checked if it's a directory.
           if (lstat.isDirectory()) {
-             return { success: false, error: `Target '${fileName}' is a directory, cannot overwrite with file.` };
+            return {
+              success: false,
+              error: `Target '${fileName}' is a directory, cannot overwrite with file.`,
+            };
           }
           currentStats = fs.statSync(targetFilePath);
         }

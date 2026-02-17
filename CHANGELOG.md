@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-17
+
+### Fixed
+
+- **JSON Serialization** - Fixed `--json` output to properly serialize Set objects to arrays
+- **POSIX Compliance** - Ensured synced files end with trailing newline for POSIX standard compliance
+- **Export Keyword Parsing** - Added support for bash `export KEY=value` syntax in .env files
+- **Edge Cases** - Improved handling of empty content and edge cases in sync operations
+
+### Added
+
+- **Security Policy** - Added SECURITY.md with vulnerability reporting guidelines
+- **Stress Tests** - Added comprehensive stress test suite with issue reproduction tests
+
+### Improved
+
+- **Code Quality** - Addressed PR review feedback with improved code clarity
+- **Test Coverage** - Added tests for export prefix and edge case parsing
+
 ## [1.1.0] - 2026-02-16
 
 ### Added

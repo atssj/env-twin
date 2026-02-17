@@ -20,9 +20,10 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 
 **Vulnerability:** The `sync` command uses an atomic write pattern (`writeFileSync` to `.tmp` then `renameSync`). This resets file permissions to the system default (e.g., `0644`), stripping restrictive permissions (e.g., `0600`) from sensitive `.env` files containing secrets.
 
-**Root Cause:** `fs.rename()` preserves the *source* (temp) file's permissions, not the *target* file's permissions.
+**Root Cause:** `fs.rename()` preserves the _source_ (temp) file's permissions, not the _target_ file's permissions.
 
 **Status:**
+
 - All 17 PRs fix the same issue with minor variations in approach
 - PRs #26-#30 are **draft** PRs from `google-labs-jules[bot]`
 - PRs #31-#42 are **ready** PRs (mix of `google-labs-jules[bot]` and `atssj`)
@@ -37,6 +38,7 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 **Recommendation:** Keep PR #42, close PRs #26-#41 as superseded.
 
 #### CodeRabbit Review Findings on PR #42 (to address before merge)
+
 1. Move `SENSITIVE_FILE_PATTERN` constant below import block (cosmetic)
 2. Mask `stats.mode` with `& 0o777` to strip file-type bits
 3. Add negative assertion in test for `.env.example` permissions
@@ -51,6 +53,7 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 **Status:** Ready for review, CI passing
 
 **Changes:**
+
 - Adds `isPathSafe()` method to `FileRestorer` and `RollbackManager`
 - Validates filenames in `restoreSingleFile` to reject path separators and `..`
 - Adds symlink detection via `lstatSync` to prevent arbitrary file overwrite
@@ -59,6 +62,7 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 - Updates `.jules/sentinel.md` with learning documentation
 
 **Overlap with main:** This PR was branched from an older commit. It includes unrelated changes:
+
 - `package.json` key reordering (alphabetical sort)
 - `bun.lock` minor change
 - Complete rewrite of `src/commands/sync.ts` (introduces `sync-logic.ts`, UI module, interactive mode)
@@ -67,6 +71,7 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 **Risk:** The `sync.ts` rewrite in this PR is the same as PR #22's changes that appear to already be on `main`. The path traversal fix itself is the valuable part.
 
 **Recommendation:** Cherry-pick only the security-specific changes from PR #23:
+
 - `src/modules/file-restoration.ts` — path validation and symlink checks in `restoreSingleFile`
 - `src/modules/rollback-manager.ts` — `isPathSafe()` and path traversal guards
 - `src/utils/backup.ts` — path traversal and symlink checks in `restoreBackup`
@@ -85,6 +90,7 @@ The repository has 19 open PRs that fall into **3 distinct categories**. 17 of t
 **Status:** Ready for review, CI passing
 
 **Changes:**
+
 - New `src/utils/atomic-fs.ts` — reusable `writeAtomic()` function with:
   - Write-to-temp-then-rename pattern
   - Mode/permission preservation
@@ -111,6 +117,7 @@ Close PRs #26 through #41 with a comment explaining they are superseded by PR #4
 ### Phase 2: Verify Path Traversal Status
 
 Check if the latest main commit (`192fdf0`) already covers the path traversal fixes from PR #23:
+
 - Compare `src/modules/file-restoration.ts` on main vs PR #23
 - Compare `src/modules/rollback-manager.ts` on main vs PR #23
 - Compare `src/utils/backup.ts` on main vs PR #23
@@ -145,35 +152,35 @@ If already covered, close PR #23 as superseded. If partially covered, cherry-pic
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Merge conflicts from stale branches | High | Medium | Rebase before merge, resolve conflicts carefully |
-| Test regressions from overlapping changes | Medium | High | Run full test suite after each merge |
-| Permission fix doesn't work on all platforms | Low | Medium | PR #42 already handles Windows gracefully with try/catch |
-| Path traversal fix already on main | Medium | Low | Verify before attempting merge of PR #23 |
+| Risk                                         | Likelihood | Impact | Mitigation                                               |
+| -------------------------------------------- | ---------- | ------ | -------------------------------------------------------- |
+| Merge conflicts from stale branches          | High       | Medium | Rebase before merge, resolve conflicts carefully         |
+| Test regressions from overlapping changes    | Medium     | High   | Run full test suite after each merge                     |
+| Permission fix doesn't work on all platforms | Low        | Medium | PR #42 already handles Windows gracefully with try/catch |
+| Path traversal fix already on main           | Medium     | Low    | Verify before attempting merge of PR #23                 |
 
 ---
 
 ## Appendix: Full PR Inventory
 
-| PR | Title | Category | Author | Draft | Recommendation |
-|----|-------|----------|--------|-------|---------------|
-| #42 | Fix insecure permissions in atomic file updates | CWE-276 | atssj | No | **MERGE** (after review fixes) |
-| #41 | [HIGH] Fix permission reset in sync command | CWE-276 | atssj | No | Close (superseded by #42) |
-| #40 | [CRITICAL] Fix Permission Reset in Sync Command | CWE-276 | atssj | No | Close (superseded by #42) |
-| #39 | [CRITICAL] Fix insecure file permissions in sync | CWE-276 | atssj | No | Close (superseded by #42) |
-| #38 | Fix Insecure File Permissions (CWE-276) in Sync | CWE-276 | atssj | No | Close (superseded by #42) |
-| #37 | Fix insecure file permissions in sync command | CWE-276 | atssj | No | Close (superseded by #42) |
-| #36 | [HIGH] Fix Permission Reset in Atomic Write | CWE-276 | atssj | No | Close (superseded by #42) |
-| #35 | Fix permission regression in sync command | CWE-276 | atssj | No | Close (superseded by #42) |
-| #34 | [CRITICAL] Fix permission reset vulnerability | CWE-276 | atssj | No | Close (superseded by #42) |
-| #33 | Fix Insecure File Permissions in Sync and Restore | CWE-276 | atssj | No | Close (superseded by #42) |
-| #32 | Fix insecure file permissions during sync | CWE-276 | atssj | No | Close (superseded by #42) |
-| #31 | Fix Insecure File Permissions in Sync Command | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #30 | Fix insecure file permissions during sync | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #29 | [HIGH] Fix permission escalation in sync | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #28 | [CRITICAL] Fix Information Exposure in Atomic Writes | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #27 | Fix insecure temporary file permissions | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #26 | Fix insecure permissions in atomic file writes | CWE-276 | jules[bot] | Yes | Close (superseded by #42) |
-| #23 | Prevent path traversal in file restoration | Path Traversal | jules[bot] | No | Verify vs main, cherry-pick if needed |
-| #22 | Fix Data Integrity with Atomic Writes | Atomic Writes | jules[bot] | No | Evaluate for rebase & merge |
+| PR  | Title                                                | Category       | Author     | Draft | Recommendation                        |
+| --- | ---------------------------------------------------- | -------------- | ---------- | ----- | ------------------------------------- |
+| #42 | Fix insecure permissions in atomic file updates      | CWE-276        | atssj      | No    | **MERGE** (after review fixes)        |
+| #41 | [HIGH] Fix permission reset in sync command          | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #40 | [CRITICAL] Fix Permission Reset in Sync Command      | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #39 | [CRITICAL] Fix insecure file permissions in sync     | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #38 | Fix Insecure File Permissions (CWE-276) in Sync      | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #37 | Fix insecure file permissions in sync command        | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #36 | [HIGH] Fix Permission Reset in Atomic Write          | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #35 | Fix permission regression in sync command            | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #34 | [CRITICAL] Fix permission reset vulnerability        | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #33 | Fix Insecure File Permissions in Sync and Restore    | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #32 | Fix insecure file permissions during sync            | CWE-276        | atssj      | No    | Close (superseded by #42)             |
+| #31 | Fix Insecure File Permissions in Sync Command        | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #30 | Fix insecure file permissions during sync            | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #29 | [HIGH] Fix permission escalation in sync             | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #28 | [CRITICAL] Fix Information Exposure in Atomic Writes | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #27 | Fix insecure temporary file permissions              | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #26 | Fix insecure permissions in atomic file writes       | CWE-276        | jules[bot] | Yes   | Close (superseded by #42)             |
+| #23 | Prevent path traversal in file restoration           | Path Traversal | jules[bot] | No    | Verify vs main, cherry-pick if needed |
+| #22 | Fix Data Integrity with Atomic Writes                | Atomic Writes  | jules[bot] | No    | Evaluate for rebase & merge           |
