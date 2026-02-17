@@ -17,7 +17,14 @@ export async function runSync(options: SyncCommandOptions = {}): Promise<void> {
   let report = analyzer.analyze({ sourceOfTruth: options.source });
 
   if (options.json) {
-    console.log(JSON.stringify(report, null, 2));
+    // Convert Sets to Arrays for JSON serialization
+    const replacer = (_key: string, value: unknown) => {
+      if (value instanceof Set) {
+        return Array.from(value);
+      }
+      return value;
+    };
+    console.log(JSON.stringify(report, replacer, 2));
     return;
   }
 
