@@ -109,3 +109,4 @@ function readMode(filePath: string): number | undefined {
     return undefined;
   }
 }
+

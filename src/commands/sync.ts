@@ -76,3 +76,4 @@ export async function runSync(options: SyncCommandOptions = {}): Promise<void> {
     prompts,
   });
 }
+
