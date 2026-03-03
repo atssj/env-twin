@@ -1,115 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- Primary Meta Tags -->
+    <title>env-twin - Seamlessly Synchronize Your Node.js Environment Configurations</title>
+    <meta name="description" content="The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all .env* files. Zero dependencies, cross-platform, with smart backup and restore.">
+    <meta name="keywords" content="env, dotenv, environment, sync, example, template, configuration, nodejs, cli">
+    <meta name="author" content="S Saha">
 
-  <!-- Primary Meta Tags -->
-  <title>env-twin - Sync Your .env Files</title>
-  <meta name="description" content="Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync.">
-  <meta name="keywords" content="env, dotenv, environment, sync, example, template, configuration, nodejs, cli">
-  <meta name="author" content="S Saha">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://atssj.github.io/env-twin/">
+    <meta property="og:title" content="env-twin - Synchronize Your .env Files Effortlessly">
+    <meta property="og:description" content="Keep your environment variables in sync across .env, .env.example, and more. Zero dependencies, smart backups.">
+    <meta property="og:image" content="https://ik.imagekit.io/4ovslat2zu/env-twin/logo.png?updatedAt=1772564001974">
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://atssj.github.io/env-twin/">
-  <meta property="og:title" content="env-twin - Seamlessly Synchronize Your Node.js Environment Configurations">
-  <meta property="og:description" content="The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all .env* files. Zero dependencies, cross-platform, with smart backup and restore.">
-  <meta property="og:image" content="https://atssj.github.io/env-twin/assets/images/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="env-twin - Environment Variable Sync Tool">
-  <meta property="og:site_name" content="env-twin">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://ik.imagekit.io/4ovslat2zu/env-twin/logo.png?updatedAt=1772564001974">
 
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://atssj.github.io/env-twin/">
-  <meta property="twitter:title" content="env-twin - Sync Your .env Files">
-  <meta property="twitter:description" content="Synchronize your .env.example and .env files effortlessly. The ultimate CLI tool for Node.js environment configuration management.">
-  <meta property="twitter:image" content="https://atssj.github.io/env-twin/assets/images/og-image.png">
-  <meta property="twitter:image:alt" content="env-twin - Environment Variable Sync Tool">
+    <!-- Theme Initialization -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 
-  <!-- WhatsApp (uses OG tags above) -->
-  <!-- LinkedIn (uses OG tags above) -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="assets/css/style.css">
-
-  <!-- Redirect to GitHub repo after a delay -->
-  <meta http-equiv="refresh" content="5;url=https://github.com/atssj/env-twin">
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <div class="container">
     <header>
-      <div class="logo">🔧 env-twin</div>
-      <h1>Seamlessly Synchronize Your Node.js Environment Configurations</h1>
-      <p class="tagline">The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all <code>.env*</code> files</p>
+        <div class="container">
+            <div class="logo-container">
+                <img src="https://ik.imagekit.io/4ovslat2zu/env-twin/logo.png?updatedAt=1772564001974" alt="env-twin logo" class="logo-img">
+                <span>env-twin</span>
+            </div>
+            <div class="nav-actions">
+                <a href="https://github.com/atssj/env-twin" class="icon-btn" title="GitHub Repository" aria-label="GitHub Repository">
+                    <i class="ri-github-fill"></i>
+                </a>
+                <button id="theme-toggle" class="icon-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="ri-moon-line"></i>
+                </button>
+            </div>
+        </div>
     </header>
 
-    <main>
-      <section class="features">
-        <h2>Features</h2>
-        <ul>
-          <li>✅ Automatically sync environment variable keys across multiple <code>.env*</code> files</li>
-          <li>🔐 Secure sensitive data by sanitizing values in <code>.env.example</code> files</li>
-          <li>🔄 Preserve comments, formatting, and file structure</li>
-          <li>💾 Smart backup and rollback management</li>
-          <li>🌏 Cross-platform support: Windows, macOS, and Linux</li>
-          <li>📦 Zero external dependencies</li>
-        </ul>
-      </section>
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <img src="https://ik.imagekit.io/4ovslat2zu/env-twin/logo.png?updatedAt=1772564001974" alt="env-twin logo" class="hero-logo">
+            <h1>Synchronize Your .env Files Effortlessly</h1>
+            <p>The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all <code>.env*</code> files. Zero dependencies, cross-platform, and developer-friendly.</p>
+            <div class="hero-btns">
+                <a href="#installation" class="btn btn-primary">Get Started <i class="ri-arrow-right-line"></i></a>
+                <a href="https://github.com/atssj/env-twin" target="_blank" rel="noopener" class="btn btn-secondary"><i class="ri-github-fill"></i> GitHub</a>
+                <a href="https://www.npmjs.com/package/env-twin" target="_blank" rel="noopener" class="btn btn-secondary"><i class="ri-npmjs-fill"></i> npm</a>
+            </div>
+        </section>
 
-      <section class="installation">
-        <h2>Quick Install</h2>
-        <div class="code-block">
-          <code>npm install --save-dev env-twin</code>
-          <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        </div>
-      </section>
+        <!-- Features Section -->
+        <section id="features">
+            <h2>Why env-twin?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="ri-refresh-line feature-icon"></i>
+                    <h3>Automated Sync</h3>
+                    <p>Ensures every <code>.env*</code> file has the complete set of environment variables from your source of truth.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-shield-keyhole-line feature-icon"></i>
+                    <h3>Secure Sanitization</h3>
+                    <p>Automatically replaces sensitive values in <code>.env.example</code> with safe placeholders like <code>input_DB_PASSWORD</code>.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-save-3-line feature-icon"></i>
+                    <h3>Smart Backups</h3>
+                    <p>Creates timestamped backups before any modification, with full rollback support in case of errors.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-node-tree feature-icon"></i>
+                    <h3>Preserves Formatting</h3>
+                    <p>Keeps your comments, empty lines, and file structure intact. No more messy, auto-generated files.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-box-3-line feature-icon"></i>
+                    <h3>Zero Dependencies</h3>
+                    <p>Built with pure Node.js APIs. Minimal footprint, maximum performance, and no supply-chain risks.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-terminal-box-line feature-icon"></i>
+                    <h3>CI/CD Ready</h3>
+                    <p>Designed to run seamlessly in automated pipelines with non-interactive flags and clear exit codes.</p>
+                </div>
+            </div>
+        </section>
 
-      <section class="cta">
-        <a href="https://github.com/atssj/env-twin" class="btn btn-primary">View on GitHub →</a>
-        <a href="https://www.npmjs.com/package/env-twin" class="btn btn-secondary">View on npm ↗</a>
-      </section>
+        <!-- Installation Section -->
+        <section id="installation">
+            <h2>Quick Installation</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 2rem;">Install env-twin as a development dependency with your favorite package manager.</p>
+            <div class="tabs">
+                <div class="tab-list" role="tablist">
+                    <button class="tab-btn active" data-tab="bun" role="tab" aria-selected="true">Bun</button>
+                    <button class="tab-btn" data-tab="npm" role="tab" aria-selected="false">npm</button>
+                    <button class="tab-btn" data-tab="yarn" role="tab" aria-selected="false">Yarn</button>
+                    <button class="tab-btn" data-tab="pnpm" role="tab" aria-selected="false">pnpm</button>
+                </div>
+                <div id="bun" class="tab-pane active" role="tabpanel">
+                    <div class="code-block">
+                        <code>bun add -D env-twin</code>
+                        <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+                    </div>
+                </div>
+                <div id="npm" class="tab-pane" role="tabpanel">
+                    <div class="code-block">
+                        <code>npm install --save-dev env-twin</code>
+                        <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+                    </div>
+                </div>
+                <div id="yarn" class="tab-pane" role="tabpanel">
+                    <div class="code-block">
+                        <code>yarn add --dev env-twin</code>
+                        <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+                    </div>
+                </div>
+                <div id="pnpm" class="tab-pane" role="tabpanel">
+                    <div class="code-block">
+                        <code>pnpm add -D env-twin</code>
+                        <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-      <p class="redirect-notice">Redirecting to GitHub in 5 seconds...</p>
+        <!-- How It Works Section -->
+        <section id="how-it-works">
+            <h2>How It Works</h2>
+            <p style="margin-bottom: 3rem; text-align: center; color: var(--text-secondary);">env-twin follows a simple yet robust process to keep your environment files safe and synchronized.</p>
+            <div class="features-grid" style="grid-template-columns: 1fr;">
+                <div class="feature-card" style="display: flex; align-items: flex-start; gap: 1.5rem;">
+                    <div style="background: var(--accent); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; font-size: 1.25rem;">1</div>
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">Discovery & Analysis</h3>
+                        <p>Scans your project for <code>.env*</code> files and reads your source of truth (defaults to <code>.env</code>) to identify all variable keys, values, and comments. It understands complex file structures and preserves your formatting.</p>
+                    </div>
+                </div>
+                <div class="feature-card" style="display: flex; align-items: flex-start; gap: 1.5rem;">
+                    <div style="background: var(--accent); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; font-size: 1.25rem;">2</div>
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">Sanitization</h3>
+                        <p>For <code>.env.example</code> files, it automatically replaces sensitive values with safe placeholders (e.g., <code>input_API_KEY</code>). This ensures you never accidentally commit secrets to your repository while keeping your templates up to date.</p>
+                    </div>
+                </div>
+                <div class="feature-card" style="display: flex; align-items: flex-start; gap: 1.5rem;">
+                    <div style="background: var(--accent); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; font-size: 1.25rem;">3</div>
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">Safe Synchronization</h3>
+                        <p>Creates a timestamped backup in <code>.env-twin/</code> before updating target files. It only adds missing keys, never overwriting your existing local values. If anything goes wrong, you can easily restore from a backup.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Section -->
+        <section id="usage">
+            <h2>Quick Start</h2>
+            <p>Run env-twin to sync your environment files using the default configuration:</p>
+            <div class="code-block">
+                <code>npx env-twin</code>
+                <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+            </div>
+            
+            <p style="margin-top: 2rem;">Or customize source and destination paths:</p>
+            <div class="code-block">
+                <code>npx env-twin --source .env.development --dest .env.dev.example</code>
+                <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy to clipboard"><i class="ri-file-copy-line"></i> Copy</button>
+            </div>
+
+            <h3 style="margin: 3rem 0 1.5rem;">Available Commands</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>sync</h3>
+                    <p>Synchronize environment variable keys across all <code>.env*</code> files with automatic backup.</p>
+                    <div class="code-block" style="padding: 1rem;"><code>npx env-twin sync</code></div>
+                </div>
+                <div class="feature-card">
+                    <h3>restore</h3>
+                    <p>Restore <code>.env*</code> files from backups with rollback support and interactive selection.</p>
+                    <div class="code-block" style="padding: 1rem;"><code>npx env-twin restore</code></div>
+                </div>
+                <div class="feature-card">
+                    <h3>clean-backups</h3>
+                    <p>Remove old backups to save disk space while keeping the most recent ones.</p>
+                    <div class="code-block" style="padding: 1rem;"><code>npx env-twin clean-backups</code></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        What happens when conflicting values exist?
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>env-twin adopts a union approach—it preserves existing values and only adds missing keys with empty values. Conflicting values are maintained as-is with no overwriting or prioritization, ensuring your local configurations remain safe.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        How does it handle sensitive data?
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Only <code>.env.example</code> files (or any file specified as a destination for sanitization) have values replaced with sanitized placeholders (e.g., <code>input_DB_PASSWORD</code>). Your actual <code>.env</code> files remain untouched during sync operations.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        Are backups created automatically?
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, unless using the <code>--no-backup</code> option, backups are automatically created before syncing changes. Backups are stored in the <code>.env-twin/</code> directory, which we recommend adding to your <code>.gitignore</code>.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        Is it safe for production use?
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Absolutely. With automatic backups and rollback features, it minimizes risks of data loss. It's designed to be used in both development and CI/CD environments where configuration consistency is key.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        Does it support multiline values?
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Currently, env-twin has limited support for complex multiline values. It works best with standard <code>KEY=VALUE</code> pairs and simple multiline strings. Improving multiline support is on our roadmap.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer>
-      <p>Made with ❤️ by <a href="https://github.com/atssj">S Saha</a> • Licensed under MIT</p>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/atssj/env-twin" target="_blank" rel="noopener" title="GitHub"><i class="ri-github-fill"></i></a>
+                <a href="https://www.npmjs.com/package/env-twin" target="_blank" rel="noopener" title="npm"><i class="ri-npmjs-fill"></i></a>
+            </div>
+            <p>&copy; 2024 env-twin. Licensed under MIT.</p>
+            <p>Built with <a href="https://bun.sh" target="_blank" rel="noopener">Bun</a> & TypeScript</p>
+            <p style="margin-top: 1rem;">Made with ❤️ by <a href="https://github.com/atssj" target="_blank" rel="noopener">S Saha</a></p>
+        </div>
     </footer>
-  </div>
 
-  <script>
-    function copyToClipboard(button) {
-      const code = button.previousElementSibling.textContent;
-      const original = button.textContent;
-
-      if (!navigator.clipboard) {
-        button.textContent = 'Copy failed';
-        setTimeout(() => {
-          button.textContent = original;
-        }, 2000);
-        return;
-      }
-
-      navigator.clipboard.writeText(code).then(() => {
-        button.textContent = 'Copied!';
-        button.classList.add('copied');
-        setTimeout(() => {
-          button.textContent = original;
-          button.classList.remove('copied');
-        }, 2000);
-      }).catch(() => {
-        button.textContent = 'Copy failed';
-        setTimeout(() => {
-          button.textContent = original;
-        }, 2000);
-      });
-    }
-  </script>
+    <!-- Scripts -->
+    <script src="assets/js/script.js"></script>
 </body>
 </html>
