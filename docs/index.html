@@ -86,13 +86,27 @@
   <script>
     function copyToClipboard(button) {
       const code = button.previousElementSibling.textContent;
+      const original = button.textContent;
+
+      if (!navigator.clipboard) {
+        button.textContent = 'Copy failed';
+        setTimeout(() => {
+          button.textContent = original;
+        }, 2000);
+        return;
+      }
+
       navigator.clipboard.writeText(code).then(() => {
-        const original = button.textContent;
         button.textContent = 'Copied!';
         button.classList.add('copied');
         setTimeout(() => {
           button.textContent = original;
           button.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        button.textContent = 'Copy failed';
+        setTimeout(() => {
+          button.textContent = original;
         }, 2000);
       });
     }
