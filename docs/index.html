@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>env-twin - Sync Your .env Files</title>
+  <meta name="description" content="Synchronize your .env.example and .env files effortlessly. env-twin ensures your environment variable templates and actual configurations stay in sync.">
+  <meta name="keywords" content="env, dotenv, environment, sync, example, template, configuration, nodejs, cli">
+  <meta name="author" content="S Saha">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://atssj.github.io/env-twin/">
+  <meta property="og:title" content="env-twin - Seamlessly Synchronize Your Node.js Environment Configurations">
+  <meta property="og:description" content="The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all .env* files. Zero dependencies, cross-platform, with smart backup and restore.">
+  <meta property="og:image" content="https://atssj.github.io/env-twin/assets/images/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="env-twin - Environment Variable Sync Tool">
+  <meta property="og:site_name" content="env-twin">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://atssj.github.io/env-twin/">
+  <meta property="twitter:title" content="env-twin - Sync Your .env Files">
+  <meta property="twitter:description" content="Synchronize your .env.example and .env files effortlessly. The ultimate CLI tool for Node.js environment configuration management.">
+  <meta property="twitter:image" content="https://atssj.github.io/env-twin/assets/images/og-image.png">
+  <meta property="twitter:image:alt" content="env-twin - Environment Variable Sync Tool">
+
+  <!-- WhatsApp (uses OG tags above) -->
+  <!-- LinkedIn (uses OG tags above) -->
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Redirect to GitHub repo after a delay -->
+  <meta http-equiv="refresh" content="5;url=https://github.com/atssj/env-twin">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🔧 env-twin</div>
+      <h1>Seamlessly Synchronize Your Node.js Environment Configurations</h1>
+      <p class="tagline">The ultimate CLI tool to keep your environment variable configurations perfectly synchronized across all <code>.env*</code> files</p>
+    </header>
+
+    <main>
+      <section class="features">
+        <h2>Features</h2>
+        <ul>
+          <li>✅ Automatically sync environment variable keys across multiple <code>.env*</code> files</li>
+          <li>🔐 Secure sensitive data by sanitizing values in <code>.env.example</code> files</li>
+          <li>🔄 Preserve comments, formatting, and file structure</li>
+          <li>💾 Smart backup and rollback management</li>
+          <li>🌏 Cross-platform support: Windows, macOS, and Linux</li>
+          <li>📦 Zero external dependencies</li>
+        </ul>
+      </section>
+
+      <section class="installation">
+        <h2>Quick Install</h2>
+        <div class="code-block">
+          <code>npm install --save-dev env-twin</code>
+          <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        </div>
+      </section>
+
+      <section class="cta">
+        <a href="https://github.com/atssj/env-twin" class="btn btn-primary">View on GitHub →</a>
+        <a href="https://www.npmjs.com/package/env-twin" class="btn btn-secondary">View on npm ↗</a>
+      </section>
+
+      <p class="redirect-notice">Redirecting to GitHub in 5 seconds...</p>
+    </main>
+
+    <footer>
+      <p>Made with ❤️ by <a href="https://github.com/atssj">S Saha</a> • Licensed under MIT</p>
+    </footer>
+  </div>
+
+  <script>
+    function copyToClipboard(button) {
+      const code = button.previousElementSibling.textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = original;
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
