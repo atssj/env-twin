@@ -1,0 +1,292 @@
+/* ==========================================================================
+   Animation Keyframes & Utilities
+   Modern micro-interactions with reduced-motion support
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Entrance Animations
+   -------------------------------------------------------------------------- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Special Effects
+   -------------------------------------------------------------------------- */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(37, 99, 235, 0.5);
+    }
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Scroll Progress Animation
+   -------------------------------------------------------------------------- */
+@keyframes progress {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
+/* --------------------------------------------------------------------------
+   Magnetic Button Effect Keyframes
+   -------------------------------------------------------------------------- */
+@keyframes magneticPull {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(2px, -2px); }
+    50% { transform: translate(-2px, 2px); }
+    75% { transform: translate(2px, 2px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   Utility Classes
+   -------------------------------------------------------------------------- */
+
+/* Base animation setup */
+.animate {
+    animation-fill-mode: both;
+    animation-duration: var(--duration-normal, 500ms);
+    animation-timing-function: var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Animation variants */
+.animate-fadeIn { animation-name: fadeIn; }
+.animate-fadeInUp { animation-name: fadeInUp; }
+.animate-fadeInDown { animation-name: fadeInDown; }
+.animate-fadeInLeft { animation-name: fadeInLeft; }
+.animate-fadeInRight { animation-name: fadeInRight; }
+.animate-scaleIn { animation-name: scaleIn; }
+
+/* Duration modifiers */
+.duration-fast { animation-duration: var(--duration-fast, 200ms); }
+.duration-normal { animation-duration: var(--duration-normal, 500ms); }
+.duration-slow { animation-duration: var(--duration-slow, 800ms); }
+
+/* Delay modifiers for staggered animations */
+.delay-1 { animation-delay: var(--stagger-1, 100ms); }
+.delay-2 { animation-delay: var(--stagger-2, 200ms); }
+.delay-3 { animation-delay: var(--stagger-3, 300ms); }
+.delay-4 { animation-delay: var(--stagger-4, 400ms); }
+.delay-5 { animation-delay: var(--stagger-5, 500ms); }
+.delay-6 { animation-delay: var(--stagger-6, 600ms); }
+
+/* Hover animations */
+.hover-lift {
+    transition: transform var(--duration-fast) var(--ease-out-expo),
+                box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.hover-scale {
+    transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.hover-scale:hover {
+    transform: scale(1.02);
+}
+
+.hover-glow {
+    transition: box-shadow var(--duration-normal) var(--ease-out-expo);
+}
+
+.hover-glow:hover {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 25%,
+        var(--bg-primary) 50%,
+        var(--bg-secondary) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Typing cursor effect */
+.typing-cursor::after {
+    content: '|';
+    animation: blink 1s infinite;
+    color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion Support
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .animate-on-scroll {
+        opacity: 1;
+        transform: none;
+    }
+
+    .hover-lift:hover,
+    .hover-scale:hover {
+        transform: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Performance Optimizations
+   -------------------------------------------------------------------------- */
+.will-animate {
+    will-change: transform, opacity;
+}
+
+.contain-layout {
+    contain: layout style paint;
+}
+
+.gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
