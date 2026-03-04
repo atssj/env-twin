@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
+import crypto from 'crypto';
 import { BackupDiscovery, BackupValidationResult } from '../modules/backup-discovery.js';
 import { TimestampParser } from '../modules/timestamp-parser.js';
 import { FileRestorer, FileRestoreOptions, RestoreProgress } from '../modules/file-restoration.js';
@@ -88,7 +89,8 @@ export async function runEnhancedRestore(options: EnhancedRestoreOptions = {}): 
  * Create and initialize a restore session
  */
 function createRestoreSession(options: EnhancedRestoreOptions): RestoreSession {
-  const sessionId = `restore-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const randomSuffix = crypto.randomBytes(8).toString('hex');
+  const sessionId = `restore-${Date.now()}-${randomSuffix}`;
 
   logger.info('Creating restore session', {
     sessionId,
