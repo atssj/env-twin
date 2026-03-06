@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'bun:test';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 describe('env-twin CLI', () => {
   const testDir = path.join(__dirname, 'test-temp');
@@ -634,7 +634,9 @@ VAR2=value2
     }
 
     // Run sync command with --no-backup flag (implies no interactivity in this context if logic supports it, but add --yes to be safe)
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --no-backup --yes`, { cwd: testDir });
+    execFileSync('bun', [path.join(__dirname, 'index.ts'), 'sync', '--no-backup', '--yes'], {
+      cwd: testDir,
+    });
 
     // Verify backup directory was not created
     expect(fs.existsSync(backupDir)).toBe(false);
@@ -646,7 +648,9 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), 'VAR3=value3\n');
 
     // Run sync command to create backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
+    execFileSync('bun', [path.join(__dirname, 'index.ts'), 'sync', '--yes'], {
+      cwd: testDir,
+    });
 
     // Get the backup timestamp
     const backupDir = path.join(testDir, '.env-twin');
@@ -659,9 +663,13 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env'), 'VAR1=modified_value\n');
 
     // Restore from backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} restore ${timestamp} --yes`, {
-      cwd: testDir,
-    });
+    execFileSync(
+      'bun',
+      [path.join(__dirname, 'index.ts'), 'restore', timestamp, '--yes'],
+      {
+        cwd: testDir,
+      },
+    );
 
     // Verify original values were restored
     const env = fs.readFileSync(path.join(testDir, '.env'), 'utf-8');
@@ -675,12 +683,18 @@ VAR2=value2
     fs.writeFileSync(path.join(testDir, '.env.local'), ''); // Ensure sync has work to do
 
     // Run sync command to create backup
-    execSync(`bun ${path.join(__dirname, 'index.ts')} sync --yes`, { cwd: testDir });
+    execFileSync('bun', [path.join(__dirname, 'index.ts'), 'sync', '--yes'], {
+      cwd: testDir,
+    });
 
     // List backups
-    const output = execSync(`bun ${path.join(__dirname, 'index.ts')} restore --list`, {
-      cwd: testDir,
-    }).toString();
+    const output = execFileSync(
+      'bun',
+      [path.join(__dirname, 'index.ts'), 'restore', '--list'],
+      {
+        cwd: testDir,
+      },
+    ).toString();
     expect(output).toContain('Available backups');
     expect(output).toContain('.env');
   });
