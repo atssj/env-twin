@@ -43,6 +43,15 @@
         })();
     </script>
 
+    <!-- Progressive Enhancement - Add js-ready class when JS loads -->
+    <script>
+        (function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('js-ready');
+            });
+        })();
+    </script>
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 

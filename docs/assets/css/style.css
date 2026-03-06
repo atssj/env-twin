@@ -353,6 +353,35 @@ header .container {
     gap: var(--space-4);
 }
 
+/* Mobile Navigation Menu */
+@media (max-width: 768px) {
+    .nav-actions {
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: var(--space-4) var(--space-6);
+        flex-direction: row;
+        justify-content: center;
+        gap: var(--space-4);
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all var(--duration-normal) var(--ease-out);
+        z-index: 999;
+    }
+
+    .nav-actions.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
 .icon-btn {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -406,7 +435,7 @@ header .container {
    Hero Section
    -------------------------------------------------------------------------- */
 .hero {
-    padding: var(--space-20) 0 var(--space-16);
+    padding: var(--space-12) 0 var(--space-10);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -431,10 +460,14 @@ header .container {
 }
 
 .hero-logo {
-    height: 140px;
+    height: 100px;
     width: auto;
-    margin-bottom: var(--space-8);
-    filter: drop-shadow(0 20px 40px rgba(37, 99, 235, 0.2));
+    margin-bottom: var(--space-6);
+    border-radius: var(--space-3);
+    background: var(--bg-secondary);
+    padding: var(--space-3);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg), 0 0 60px rgba(37, 99, 235, 0.15);
     animation: fadeInDown var(--duration-slower) var(--ease-out-expo) backwards,
                float 6s ease-in-out infinite 1s;
 }
@@ -533,7 +566,7 @@ header .container {
    Sections
    -------------------------------------------------------------------------- */
 section {
-    padding: var(--space-16) 0;
+    padding: var(--space-12) 0;
     border-bottom: 1px solid var(--border-subtle);
     position: relative;
 }
@@ -545,7 +578,7 @@ section:last-of-type {
 section h2 {
     font-size: var(--text-3xl);
     font-weight: 800;
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-8);
     text-align: center;
     color: var(--text-primary);
 }
@@ -554,8 +587,8 @@ section h2 {
 .section-subtitle {
     text-align: center;
     color: var(--text-secondary);
-    margin-top: calc(var(--space-10) * -1);
-    margin-bottom: var(--space-10);
+    margin-top: calc(var(--space-8) * -1);
+    margin-bottom: var(--space-8);
     font-size: var(--text-lg);
 }
 
@@ -932,7 +965,7 @@ section h2 {
    Footer
    -------------------------------------------------------------------------- */
 footer {
-    padding: var(--space-16) 0 var(--space-10);
+    padding: var(--space-12) 0 var(--space-8);
     text-align: center;
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
@@ -995,6 +1028,33 @@ footer p {
 }
 
 /* --------------------------------------------------------------------------
+   Scroll Animation Fallbacks
+   -------------------------------------------------------------------------- */
+/* Ensure elements are visible by default as fallback */
+.feature-card,
+section h2,
+.process-card,
+.faq-item {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Animation visible class applied by JS */
+.animate-visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Progressive enhancement: hide elements only when JS is ready */
+.js-ready .feature-card:not(.animate-visible),
+.js-ready section h2:not(.animate-visible),
+.js-ready .process-card:not(.animate-visible),
+.js-ready .faq-item:not(.animate-visible) {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* --------------------------------------------------------------------------
    Responsive Design
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
@@ -1009,7 +1069,7 @@ footer p {
     }
 
     .hero {
-        padding: var(--space-16) 0 var(--space-12);
+        padding: var(--space-10) 0 var(--space-8);
     }
 
     .hero h1 {
@@ -1031,7 +1091,7 @@ footer p {
     }
 
     section {
-        padding: var(--space-12) 0;
+        padding: var(--space-10) 0;
     }
 
     .features-grid {

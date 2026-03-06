@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeader();
     initReadingProgress();
     initBackToTop();
+    initMobileNavigation();
     initTabs();
     initFAQ();
     initCodeBlocks();
@@ -193,6 +194,64 @@ function initBackToTop() {
 }
 
 /**
+ * Mobile Navigation Toggle
+ */
+function initMobileNavigation() {
+    const toggle = document.querySelector('.mobile-nav-toggle');
+    const navActions = document.getElementById('nav-actions');
+
+    if (!toggle || !navActions) return;
+
+    const closeNav = () => {
+        toggle.classList.remove('active');
+        toggle.setAttribute('aria-expanded', 'false');
+        navActions.classList.remove('active');
+    };
+
+    const openNav = () => {
+        toggle.classList.add('active');
+        toggle.setAttribute('aria-expanded', 'true');
+        navActions.classList.add('active');
+    };
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        if (isExpanded) {
+            closeNav();
+        } else {
+            openNav();
+        }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!toggle.contains(e.target) && !navActions.contains(e.target)) {
+            closeNav();
+        }
+    });
+
+    // Close when clicking a link inside nav-actions
+    navActions.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeNav);
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+            closeNav();
+        }
+    });
+
+    // Close on window resize if above mobile breakpoint
+    window.addEventListener('resize', throttle(() => {
+        if (window.innerWidth > 768 && toggle.getAttribute('aria-expanded') === 'true') {
+            closeNav();
+        }
+    }, 100));
+}
+
+/**
  * Tab Switching with Enhanced Animations
  */
 function initTabs() {
@@ -204,8 +263,12 @@ function initTabs() {
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
+            const newPane = document.getElementById(tabId);
+            const currentPane = document.querySelector('.tab-pane.active');
 
-            // Update active states
+            if (!newPane || newPane === currentPane) return;
+
+            // Update active states for buttons
             tabButtons.forEach(btn => {
                 btn.classList.remove('active');
                 btn.setAttribute('aria-selected', 'false');
@@ -214,22 +277,43 @@ function initTabs() {
             button.classList.add('active');
             button.setAttribute('aria-selected', 'true');
 
-            // Animate tab pane transition
-            tabPanes.forEach(pane => {
-                if (pane.classList.contains('active')) {
-                    pane.style.opacity = '0';
-                    pane.style.transform = 'translateY(-10px)';
+            // Handle pane transition
+            if (currentPane) {
+                // Fade out current pane
+                currentPane.style.opacity = '0';
+                currentPane.style.transform = 'translateY(-10px)';
 
-                    setTimeout(() => {
-                        pane.classList.remove('active');
-                        const newPane = document.getElementById(tabId);
-                        if (newPane) {
-                            newPane.classList.add('active');
-                        }
-                    }, 150);
-                }
-            });
+                // Wait for fade out to complete before switching
+                setTimeout(() => {
+                    currentPane.classList.remove('active');
+                    currentPane.hidden = true;
+
+                    // Activate new pane
+                    newPane.classList.add('active');
+                    newPane.hidden = false;
+
+                    // Trigger reflow to ensure transition works
+                    void newPane.offsetHeight;
+
+                    // Fade in new pane
+                    newPane.style.opacity = '1';
+                    newPane.style.transform = 'translateY(0)';
+                }, prefersReducedMotion() ? 0 : 150);
+            } else {
+                // No current pane, just show the new one
+                newPane.classList.add('active');
+                newPane.hidden = false;
+                newPane.style.opacity = '1';
+                newPane.style.transform = 'translateY(0)';
+            }
         });
+    });
+
+    // Initialize hidden attribute for accessibility
+    tabPanes.forEach(pane => {
+        if (!pane.classList.contains('active')) {
+            pane.hidden = true;
+        }
     });
 }
 
@@ -376,48 +460,78 @@ function initCodeBlocks() {
  * Scroll-Triggered Animations with Intersection Observer
  */
 function initScrollAnimations() {
-    if (prefersReducedMotion()) return;
-
     const animatedElements = document.querySelectorAll(
         '.feature-card, section h2, .process-card, .faq-item'
     );
 
     if (!animatedElements.length) return;
 
+    // If reduced motion is preferred, show all elements immediately
+    if (prefersReducedMotion()) {
+        animatedElements.forEach(el => {
+            el.classList.add('animate-visible');
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        });
+        return;
+    }
+
     const observerOptions = {
         root: null,
-        rootMargin: '0px 0px -50px 0px',
-        threshold: 0.1
+        rootMargin: '0px 0px -20px 0px',
+        threshold: 0.05
     };
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate-visible');
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                const el = entry.target;
+                el.classList.add('animate-visible');
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
 
                 // Stagger children if it's a container
-                const children = entry.target.querySelectorAll('.feature-icon, h3, p');
+                const children = el.querySelectorAll('.feature-icon, h3, p');
                 children.forEach((child, index) => {
                     child.style.animationDelay = `${index * 100}ms`;
                     child.classList.add('animate-in');
                 });
 
-                observer.unobserve(entry.target);
+                observer.unobserve(el);
             }
         });
     }, observerOptions);
 
     animatedElements.forEach((el, index) => {
-        // Set initial state
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 50}ms,
-                               transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 50}ms`;
+        // Check if element is already in viewport
+        const rect = el.getBoundingClientRect();
+        const isInViewport = rect.top <= (window.innerHeight || document.documentElement.clientHeight) && rect.bottom >= 0;
 
-        observer.observe(el);
+        if (isInViewport && rect.top < window.innerHeight) {
+            // Element is already visible, animate immediately
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+            el.classList.add('animate-visible');
+        } else {
+            // Set initial state for elements not yet in viewport
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 50}ms,
+                                   transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 50}ms`;
+            observer.observe(el);
+        }
     });
+
+    // Fallback: Ensure all elements become visible after a timeout in case observer fails
+    setTimeout(() => {
+        animatedElements.forEach(el => {
+            if (!el.classList.contains('animate-visible')) {
+                el.classList.add('animate-visible');
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }
+        });
+    }, 3000);
 }
 
 /**
