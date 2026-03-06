@@ -459,15 +459,91 @@ header .container {
     z-index: -1;
 }
 
+/* Decorative grid pattern */
+.hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
+    background-image:
+        linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    transform: perspective(500px) rotateX(60deg);
+    transform-origin: center top;
+    pointer-events: none;
+    z-index: -2;
+    animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+    0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+    100% { transform: perspective(500px) rotateX(60deg) translateY(60px); }
+}
+
+/* Floating decorative orbs */
+.hero-decoration {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.hero-decoration--1 {
+    width: 300px;
+    height: 300px;
+    background: rgba(37, 99, 235, 0.15);
+    top: 10%;
+    left: 10%;
+    animation: orbFloat1 8s ease-in-out infinite;
+}
+
+.hero-decoration--2 {
+    width: 200px;
+    height: 200px;
+    background: rgba(139, 92, 246, 0.12);
+    top: 20%;
+    right: 15%;
+    animation: orbFloat2 10s ease-in-out infinite;
+}
+
+.hero-decoration--3 {
+    width: 150px;
+    height: 150px;
+    background: rgba(6, 182, 212, 0.1);
+    bottom: 20%;
+    left: 20%;
+    animation: orbFloat3 12s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+@keyframes orbFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+@keyframes orbFloat3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(25px, 15px) scale(1.05); }
+}
+
 .hero-logo {
     height: 100px;
     width: auto;
     margin-bottom: var(--space-6);
     border-radius: var(--space-3);
-    background: var(--bg-secondary);
+    background: transparent;
     padding: var(--space-3);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-lg), 0 0 60px rgba(37, 99, 235, 0.15);
+    border: none;
+    box-shadow: none;
+    filter: drop-shadow(0 20px 40px rgba(37, 99, 235, 0.25));
     animation: fadeInDown var(--duration-slower) var(--ease-out-expo) backwards,
                float 6s ease-in-out infinite 1s;
 }
@@ -1166,6 +1242,14 @@ section h2,
     }
 
     .hero-logo {
+        animation: none;
+    }
+
+    .hero::after {
+        animation: none;
+    }
+
+    .hero-decoration {
         animation: none;
     }
 
