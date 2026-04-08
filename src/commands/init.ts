@@ -8,15 +8,11 @@ import { colors } from '../utils/ui.js';
 
 const INIT_FILES = ['.env', '.env.local', '.env.example'] as const;
 
-export interface InitCommandOptions {
-  verbose?: boolean;
-}
-
 /**
  * Initialize environment files (.env, .env.local, .env.example) in the current directory.
  * Skips any file that already exists to avoid overriding existing configurations.
  */
-export function runInit(options: InitCommandOptions = {}): void {
+export function runInit(): void {
   const cwd = process.cwd();
   let created = 0;
   let skipped = 0;
