@@ -16,7 +16,8 @@
     "typescript": "^5.8.3"
   },
   "bin": {
-    "env-twin": "./dist/index.js"
+    "env-twin": "./dist/index.js",
+    "et": "./dist/index.js"
   },
   "bugs": {
     "url": "https://github.com/atssj/env-twin/issues"

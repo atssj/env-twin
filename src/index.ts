@@ -197,6 +197,7 @@ function printUsage() {
 Usage: env-twin [command] [options]
 
 Commands:
+  init                  Create .env, .env.local, and .env.example files (skips existing)
   sync                  Synchronize environment variable keys across all .env* files
   restore [timestamp]   Restore .env* files from a backup (auto-selects most recent if no timestamp)
   clean-backups         Delete old backups, keeping the most recent ones
@@ -216,6 +217,7 @@ Enhanced Restore Features:
   ✅ Progress tracking and comprehensive logging
 
 Examples:
+  env-twin init
   env-twin --src .env.development --destination .env.dev.example
   env-twin sync
   env-twin restore                    # Automatically restore most recent backup
@@ -449,6 +451,10 @@ try {
       dryRun: options.dryRun,
       verbose: options.verbose,
     });
+  } else if (command === 'init') {
+    // Import and run init command
+    const { runInit } = await import('./commands/init.js');
+    runInit();
   } else if (command === 'clean-backups') {
     // Import and run clean-backups command
     const { runCleanBackups } = await import('./commands/clean-backups.js');
